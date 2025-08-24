@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Reglas para la colección 'productos'
+    match /productos/{document} {
+      allow read: if true; // Permite la lectura para todos los usuarios
+      allow write: if false; // Deniega la escritura para todos los usuarios (por ahora)
+    }
+
+    // Reglas por defecto, para otras colecciones
+    match /{document=**} {
+      allow read, write: if request.auth != null; // Requiere autenticación para leer/escribir en otras colecciones
+    }
+  }
+}

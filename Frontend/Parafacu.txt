@@ -1,0 +1,6 @@
+Facu, por favor cuando clones el proyecto asegurate de seguir tooooodas
+las buenas practicas que venimos trabajando hasta el momento,
+con eso me refiero a organizacion, legibilidad, resolucion de errores,
+comentarios, etc.
+
+Suerte y sigamos avanzando.
