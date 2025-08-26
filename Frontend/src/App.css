@@ -1,18 +1,43 @@
+/* Importa las directivas de Tailwind primero */
+@tailwind base;
+@tailwind components;
 
+
+/* Luego, importa tus fuentes de Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@300..700&display=swap');
 
+/* Y después, tus variables y clases personalizadas */
 :root {
-  /* ... tus otras variables de color aquí ... */
   --font-logo: 'Pacifico', cursive;
   --font-nav: 'Quicksand', sans-serif;
-}
-
-:root {
   --pastel-pink: #F8C8DC; 
   --text-color: #333;
   --link-hover: #E3B4C5;
   --background-color: #ffffff;
   --pastel-menta:#87cfbc;
 }
-@import 'tailwindcss'
+
+.bg-pastel-pink {
+  background-color: var(--pastel-pink);
+}
+/* Define todas tus clases personalizadas aquí */
+.font-nav {
+  font-family: var(--font-nav);
+}
+
+.nav-link {
+    font-family: var(--font-nav);
+    font-weight: 550; /* Medium, un poco más de negrita que "normal" */
+    letter-spacing: 0.01em; /* Ajusta este valor para más o menos espacio */
+
+    font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  .footer-email {
+    position: absolute;
+    left: 48%;
+    transform: translateX(-50%);
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FaUserCircle, FaShoppingCart, FaSearch, FaBars, FaTimes, FaChevronDown } from 'react-icons/fa';
+import { FaUserCircle, FaShoppingCart, FaSearch, FaBars, FaTimes } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 // Componente para el ícono del carrito con el contador
 const CartIcon = () => {
@@ -24,21 +25,9 @@ const CartIcon = () => {
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [openCategory, setOpenCategory] = useState(null);
-    const [activeMobileCategory, setActiveMobileCategory] = useState(null);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
-    };
-
-    const toggleCategory = (categoryName) => {
-        if (openCategory === categoryName) {
-            setOpenCategory(null);
-        } else {
-            setOpenCategory(categoryName);
-        }
-        
-        setActiveMobileCategory(categoryName);
     };
 
     return (
@@ -46,50 +35,65 @@ const Header = () => {
             {/* Header de Escritorio */}
             <div className="hidden md:flex justify-between items-center h-20 px-12">
                 {/* Sección del Logo */}
-                <div className="flex flex-col text-center leading-none">
+                <Link to="/" className="flex flex-col text-center leading-none">
                     <span className="text-[1.5rem] font-semibold text-gray-800 font-poppins">MODELADO</span>
-                    <span className="text-[1.2rem] font-normal text-gray-600 font-poppins">PAO</span>
-                </div>
+                    <span className="text-[1.3rem] font-normal text-gray-600 font-poppins">PAO</span>
+                </Link>
 
                 {/* Sección de Navegación */}
                 <nav className="flex flex-1 justify-center">
-                    <ul className="flex list-none m-0 p-0 space-x-4" style={{ fontFamily: 'var(--font-nav)' }}>
-                        <li className="relative group">
-                            <a href="#" className="text-[var(--text-color)] font-bold px-1 py-1 block text-sm rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
+                    <ul className="flex list-none m-0 p-0 space-x-7">
+                        <li>
+                            <Link to="/catalogo" className="nav-link text-[var(--text-color)] px-1 py-1 block rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
                                 Animales
-                            </a>
-                            <ul className="hidden group-hover:block absolute top-full left-0 bg-[var(--background-color)] min-w-[100px] shadow-lg z-10 list-none p-0 rounded-lg text-[0.9rem]">
-                                <li><a href="#" className="block px-4 py-3 rounded-t-lg hover:bg-gray-200">Granja</a></li>
-                                <li><a href="#" className="block px-4 py-3 hover:bg-gray-200">Selva</a></li>
-                                <li><a href="#" className="block px-4 py-3 rounded-b-lg hover:bg-gray-200">Bosque</a></li>
-                            </ul>
+                            </Link>
                         </li>
-                        <li><a href="#" className="text-[var(--text-color)] font-bold px-1 py-1 block text-sm rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">Fondo del mar</a></li>
-                        <li><a href="#" className="text-[var(--text-color)] font-bold px-1 py-1 block text-sm rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">Flores y hojas</a></li>
-                        <li><a href="#" className="text-[var(--text-color)] font-bold px-1 py-1 block text-sm rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">Apliques</a></li>
-                        <li><a href="#" className="text-[var(--text-color)] font-bold px-1 py-1 block text-sm rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">Princesas</a></li>
-                        <li><a href="#" className="text-[var(--text-color)] font-bold px-1 py-1 block text-sm rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">Personajes</a></li>
-                        <li><a href="#" className="text-[var(--text-color)] font-bold px-1 py-1 block text-sm rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">Kawaii</a></li>
-                        <li className="relative group">
-                            <a href="#" className="text-[var(--text-color)] font-bold px-1 py-1 block text-sm rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
+                        <li>
+                            <Link to="/catalogo" className="nav-link text-[var(--text-color)] px-1 py-1 block rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
+                                Fondo del mar
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/catalogo" className="nav-link text-[var(--text-color)] px-1 py-1 block rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
+                                Flores y hojas
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/catalogo" className="nav-link text-[var(--text-color)] px-1 py-1 block rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
+                                Apliques
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/catalogo" className="nav-link text-[var(--text-color)] px-1 py-1 block rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
+                                Princesas
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/catalogo" className="nav-link text-[var(--text-color)] px-1 py-1 block rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
+                                Personajes
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/catalogo" className="nav-link text-[var(--text-color)] px-1 py-1 block rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
+                                Kawaii
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/catalogo" className="nav-link text-[var(--text-color)] px-1 py-1 block rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
                                 Souvenirs
-                            </a>
-                            <ul className="hidden group-hover:block absolute top-full left-0 bg-[var(--background-color)] min-w-[110px] shadow-lg z-10 list-none p-0 rounded-lg text-[0.9rem]">
-                                <li><a href="#" className="block px-4 py-3 rounded-t-lg hover:bg-gray-200">Bautismo</a></li>
-                                <li><a href="#" className="block px-4 py-3 rounded-b-lg hover:bg-gray-200">Comunión</a></li>
-                            </ul>
+                            </Link>
                         </li>
                     </ul>
                 </nav>
 
                 {/* Sección de Íconos de Usuario y Carrito */}
                 <div className="flex items-center space-x-6">
-                    <a href="#" className="flex items-center text-[var(--text-color)] font-bold hover:text-gray-600 transition-colors duration-300">
+                    <Link to="/user" className="flex items-center text-[var(--text-color)] font-bold hover:text-gray-600 transition-colors duration-300">
                         <FaUserCircle className="text-[1.6rem] text-gray-600" />
-                    </a>
-                    <a href="#" className="flex items-center text-[var(--text-color)] font-bold hover:text-gray-600 transition-colors duration-300">
+                    </Link>
+                    <Link to="/cart" className="flex items-center text-[var(--text-color)] font-bold hover:text-gray-600 transition-colors duration-300">
                         <CartIcon />
-                    </a>
+                    </Link>
                 </div>
             </div>
 
@@ -98,13 +102,20 @@ const Header = () => {
                 <button onClick={toggleMenu}>
                     <FaBars className="text-[1.6rem] text-gray-700" />
                 </button>
-                <div className="flex flex-col text-center leading-none">
-                    <span className="text-[1.5rem] font-semibold text-gray-800 font-poppins">MODELADO</span>
-                    <span className="text-[1.2rem] font-normal text-gray-600 font-poppins">PAO</span>
-                </div>
-                <div className="flex items-center space-x-4">
-                    <FaSearch className="text-xl text-gray-700" />
-                    <CartIcon />
+                {/* Modificamos el contenedor del logo para que sea un enlace */}
+                <Link to="/" className="flex-1 flex justify-center">
+                    <div className="flex flex-col text-center leading-none">
+                        <span className="text-[1.5rem] font-semibold text-gray-800 font-poppins">MODELADO</span>
+                        <span className="text-[1.2rem] font-normal text-gray-600 font-poppins">PAO</span>
+                    </div>
+                </Link>
+                <div className="flex items-center space-x-2">
+                    <Link to="/search">
+                        <FaSearch className="text-xl text-gray-700" />
+                    </Link>
+                    <Link to="/cart">
+                        <CartIcon />
+                    </Link>
                 </div>
             </div>
 
@@ -123,97 +134,76 @@ const Header = () => {
                     </div>
 
                     <div className="px-6 py-4">
-                        <ul className="space-y-4" style={{ fontFamily: 'var(--font-nav)' }}>
+                        <ul className="space-y-4 text-xl"> 
                             <li>
-                                <div
-                                    className={`flex justify-between items-center w-full font-bold text-lg cursor-pointer px-4 py-3 rounded-lg ${activeMobileCategory === 'Animales' ? 'bg-[var(--pastel-menta)]' : ''}`}
-                                    onClick={() => toggleCategory('Animales')}
+                                <Link
+                                    to="/catalogo"
+                                    className="nav-link block text-lg px-4 py-3 rounded-lg hover:bg-[var(--pastel-menta)]"
                                 >
                                     Animales
-                                    <FaChevronDown className={`transform transition-transform duration-300 ${openCategory === 'Animales' ? 'rotate-180' : ''}`} />
-                                </div>
-                                {openCategory === 'Animales' && (
-                                    <ul className="mt-2 pl-4 space-y-2">
-                                        <li><a href="#" className="block text-gray-600 hover:text-gray-800">Granja</a></li>
-                                        <li><a href="#" className="block text-gray-600 hover:text-gray-800">Selva</a></li>
-                                        <li><a href="#" className="block text-gray-600 hover:text-gray-800">Bosque</a></li>
-                                    </ul>
-                                )}
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#"
-                                    className={`block text-lg font-bold px-4 py-3 rounded-lg ${activeMobileCategory === 'Fondo del mar' ? 'bg-[var(--pastel-menta)]' : ''}`}
-                                    onClick={() => toggleCategory('Fondo del mar')}
+                                <Link
+                                    to="/catalogo"
+                                    className="nav-link block text-lg px-4 py-3 rounded-lg hover:bg-[var(--pastel-menta)]"
                                 >
                                     Fondo del mar
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#"
-                                    className={`block text-lg font-bold px-4 py-3 rounded-lg ${activeMobileCategory === 'Flores y hojas' ? 'bg-[var(--pastel-menta)]' : ''}`}
-                                    onClick={() => toggleCategory('Flores y hojas')}
+                                <Link
+                                    to="/catalogo"
+                                    className="nav-link block text-lg px-4 py-3 rounded-lg hover:bg-[var(--pastel-menta)]"
                                 >
                                     Flores y hojas
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#"
-                                    className={`block text-lg font-bold px-4 py-3 rounded-lg ${activeMobileCategory === 'Apliques' ? 'bg-[var(--pastel-menta)]' : ''}`}
-                                    onClick={() => toggleCategory('Apliques')}
+                                <Link
+                                    to="/catalogo"
+                                    className="nav-link block text-lg px-4 py-3 rounded-lg hover:bg-[var(--pastel-menta)]"
                                 >
                                     Apliques
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#"
-                                    className={`block text-lg font-bold px-4 py-3 rounded-lg ${activeMobileCategory === 'Princesas' ? 'bg-[var(--pastel-menta)]' : ''}`}
-                                    onClick={() => toggleCategory('Princesas')}
+                                <Link
+                                    to="/catalogo"
+                                    className="nav-link block text-lg px-4 py-3 rounded-lg hover:bg-[var(--pastel-menta)]"
                                 >
                                     Princesas
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#"
-                                    className={`block text-lg font-bold px-4 py-3 rounded-lg ${activeMobileCategory === 'Personajes' ? 'bg-[var(--pastel-menta)]' : ''}`}
-                                    onClick={() => toggleCategory('Personajes')}
+                                <Link
+                                    to="/catalogo"
+                                    className="nav-link block text-lg px-4 py-3 rounded-lg hover:bg-[var(--pastel-menta)]"
                                 >
                                     Personajes
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#"
-                                    className={`block text-lg font-bold px-4 py-3 rounded-lg ${activeMobileCategory === 'Kawaii' ? 'bg-[var(--pastel-menta)]' : ''}`}
-                                    onClick={() => toggleCategory('Kawaii')}
+                                <Link
+                                    to="/catalogo"
+                                    className="nav-link block text-lg px-4 py-3 rounded-lg hover:bg-[var(--pastel-menta)]"
                                 >
                                     Kawaii
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <div
-                                    className={`flex justify-between items-center w-full font-bold text-lg cursor-pointer px-4 py-3 rounded-lg ${activeMobileCategory === 'Souvenirs' ? 'bg-[var(--pastel-menta)]' : ''}`}
-                                    onClick={() => toggleCategory('Souvenirs')}
+                                <Link
+                                    to="/catalogo"
+                                    className="nav-link block text-lg px-4 py-3 rounded-lg hover:bg-[var(--pastel-menta)]"
                                 >
                                     Souvenirs
-                                    <FaChevronDown className={`transform transition-transform duration-300 ${openCategory === 'Souvenirs' ? 'rotate-180' : ''}`} />
-                                </div>
-                                {openCategory === 'Souvenirs' && (
-                                    <ul className="mt-2 pl-4 space-y-2">
-                                        <li><a href="#" className="block text-gray-600 hover:text-gray-800">Bautismo</a></li>
-                                        <li><a href="#" className="block text-gray-600 hover:text-gray-800">Comunión</a></li>
-                                    </ul>
-                                )}
+                                </Link>
                             </li>
                         </ul>
                     </div>
 
-                    <div className="sticky bottom-0 w-full p-4 shadow-lg bg-[var(--background-color)]">
-                        <button className="w-full bg-[var(--pastel-menta)] text-[var(--background-color)] font-bold py-3 rounded-full text-xl" style={{ fontFamily: 'var(--font-nav)' }}>
+                    <div className="sticky bottom-0 w-full pt-6 px-4 shadow-lg bg-[var(--background-color)]">
+                        <button className="w-full bg-[var(--pastel-menta)] text-[var(--background-color)] font-xl py-3 rounded-full text-xl" style={{ fontFamily: 'var(--font-nav)' }}>
                             Pedido personalizado
                         </button>
                     </div>
