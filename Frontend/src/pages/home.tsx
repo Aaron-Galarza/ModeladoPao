@@ -3,7 +3,7 @@ import React from 'react';
 const HomePage = () => {
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>¡Bienvenido a MODELADO PAO!</h1>
+      <h1 style={{ fontSize: '2.2rem'}} >¡Bienvenido a MODELADO PAO!</h1>
       <p style={{ marginTop: '1rem', fontSize: '1.2rem', color: '#555' }}>
         Descubre un mundo de creatividad y color.
       </p>

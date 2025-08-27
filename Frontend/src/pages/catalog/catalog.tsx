@@ -1,25 +1,42 @@
-import React from 'react';
+// src/pages/CatalogPage.tsx
+import React, { useEffect, useState } from 'react';
+import { getProducts } from '../../services/products.service'; // Mantén esta importación para la función
+import type { Product } from '../../services/products.service'; // Usa 'type' para importar el tipo de dato
+import ProductList from '../../components/productos/productlist';
 
-const CatalogPage = () => {
-  return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>Nuestro Catálogo de Productos</h1>
-      <p style={{ marginTop: '1rem', fontSize: '1.2rem', color: '#555' }}>
-        Aquí encontrarás todas nuestras creaciones.
-      </p>
-      <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1.5rem' }}>
-        {/* Esto es solo un ejemplo de un "producto" */}
-        <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1rem', width: '250px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ margin: '0 0 0.5rem' }}>Apliques de Flores</h3>
-          <p style={{ margin: '0' }}>Ideal para decorar pasteles y cajas.</p>
-        </div>
-        <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1rem', width: '250px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ margin: '0 0 0.5rem' }}>Souvenirs de Animales</h3>
-          <p style={{ margin: '0' }}>Perfectos para fiestas infantiles.</p>
-        </div>
-      </div>
-    </div>
-  );
+const CatalogPage: React.FC = () => {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const fetchedProducts = await getProducts();
+                setProducts(fetchedProducts);
+            } catch (error) {
+                console.error("Error al obtener productos:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
+    if (loading) {
+        return <div className="text-center font-poppins text-gray-700 mt-10">Cargando productos...</div>;
+    }
+
+    return (
+        <div className="container mx-auto p-4">
+            <h1 className="text-4xl md:text-4xl font-poppins font-extrabold text-center mb-10
+                                                                      text-[var(--text-color)]
+                                                                      drop-shadow-md">
+                CATÁLOGO
+            </h1>
+            <ProductList products={products} />
+        </div>
+    );
 };
 
 export default CatalogPage;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Footer, FooterBrand, FooterCopyright, FooterDivider, FooterLink, FooterLinkGroup, FooterIcon } from "flowbite-react";
 import { FaFacebook, FaInstagram, FaWhatsapp, FaEnvelope } from 'react-icons/fa';
-import '../../src/App.css'; // Asegúrate de importar tu archivo CSS
+import '../../App.css'; // Asegúrate de importar tu archivo CSS
 
 const CustomFooter = () => {
   return (
