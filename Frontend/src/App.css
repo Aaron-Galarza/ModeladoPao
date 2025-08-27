@@ -13,8 +13,6 @@ background-image: url(./assets/images/fondo.jpg);
 background-size: cover;
 }
 
-
-
 :root {
   --font-logo: 'Pacifico', cursive;
   --font-nav: 'Quicksand', sans-serif;
@@ -52,3 +50,6 @@ background-size: cover;
   }
 }
 
+
+
+  
