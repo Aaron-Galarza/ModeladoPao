@@ -1,4 +1,4 @@
-import { db } from "../firebase.config";
+import { db } from "../firebase/firebase.config";
 import { collection, getDocs } from "firebase/firestore";
 
 // Definimos la interfaz del producto para tipado

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaUserCircle, FaShoppingCart, FaBars, FaTimes, FaChevronRight } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-// Componente para el ícono del carrito con el contador
 const CartIcon = () => {
   const [itemCount] = useState(0);
 
@@ -19,60 +18,41 @@ const CartIcon = () => {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
-const toggleMenu = () => {
-  if (isMenuOpen) {
-    // Iniciar animación de cierre (rápida)
-    setIsClosing(true);
-    setTimeout(() => {
-      setIsMenuOpen(false);
-      setIsClosing(false);
-      setIsAnimating(false); // Reiniciar animación al cerrar
-    }, 300);
-  } else {
-    // Reiniciar animación antes de abrir
-    setIsAnimating(false);
-    setIsMenuOpen(true);
-    setTimeout(() => {
-      setIsAnimating(true); // Activar animación después de un pequeño retraso
-    }, 10);
-  }
-};
+  const navigate = useNavigate();
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isMenuOpen &&
-        menuRef.current && 
-        !menuRef.current.contains(event.target as Node) &&
-        menuButtonRef.current &&
-        !menuButtonRef.current.contains(event.target as Node)
-      ) {
-        toggleMenu();
+      const menu = document.getElementById('mobile-menu');
+      const menuButton = document.querySelector('button[aria-label="Abrir menú"]');
+      
+      if (isMenuOpen && menu && !menu.contains(event.target as Node) && 
+          menuButton && !menuButton.contains(event.target as Node)) {
+        setIsMenuOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMenuOpen]);
 
-  // Bloquear scroll
+  // Bloquear scroll cuando el menú está abierto
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
     }
-
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
   }, [isMenuOpen]);
+
+  const handleUserClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/admin/login');
+  };
 
   return (
     <header className="bg-[var(--pastel-pink)] shadow-md fixed top-0 w-full z-50">
@@ -86,14 +66,8 @@ const toggleMenu = () => {
         <nav className="flex flex-1 justify-center">
           <ul className="flex list-none m-0 p-0 space-x-7">
             {[
-              "Animales",
-              "Fondo del mar",
-              "Flores y hojas",
-              "Apliques",
-              "Princesas",
-              "Personajes",
-              "Kawaii",
-              "Souvenirs"
+              "Animales", "Fondo del mar", "Flores y hojas", "Apliques",
+              "Princesas", "Personajes", "Kawaii", "Souvenirs"
             ].map((category, index) => (
               <li key={index}>
                 <Link to="/catalogo" className="nav-link text-[var(--text-color)] px-1 py-1 block rounded-lg hover:bg-[var(--pastel-menta)] transition-colors duration-300">
@@ -105,10 +79,14 @@ const toggleMenu = () => {
         </nav>
 
         <div className="flex items-center space-x-6">
-          <Link to="/user">
+          <button 
+            onClick={handleUserClick}
+            className="flex items-center text-[var(--text-color)] font-bold hover:text-gray-600 transition-colors duration-300"
+            aria-label="Iniciar sesión administrador"
+          >
             <FaUserCircle className="text-[1.6rem] text-gray-600" />
-          </Link>
-          <Link to="/cart">
+          </button>
+          <Link to="/cart" className="flex items-center text-[var(--text-color)] font-bold hover:text-gray-600 transition-colors duration-300">
             <CartIcon />
           </Link>
         </div>
@@ -116,7 +94,7 @@ const toggleMenu = () => {
 
       {/* Header móvil */}
       <div className="md:hidden flex justify-between items-center h-16 px-4">
-        <button ref={menuButtonRef} onClick={toggleMenu} aria-label="Abrir menú">
+        <button onClick={toggleMenu} aria-label="Abrir menú">
           <FaBars className="text-[1.6rem] text-gray-700" />
         </button>
         <div className="flex-grow flex justify-center">
@@ -126,8 +104,15 @@ const toggleMenu = () => {
           </Link>
         </div>
         <div className="flex items-center space-x-2">
-          <Link to="/user"><FaUserCircle className="text-[1.6rem] text-gray-700" /></Link>
-          <Link to="/cart"><CartIcon /></Link>
+          <button 
+            onClick={handleUserClick}
+            aria-label="Iniciar sesión administrador"
+          >
+            <FaUserCircle className="text-[1.6rem] text-gray-700" />
+          </button>
+          <Link to="/cart" aria-label="Carrito de compras">
+            <CartIcon />
+          </Link>
         </div>
       </div>
 
@@ -135,23 +120,13 @@ const toggleMenu = () => {
       {isMenuOpen && (
         <>
           <div 
-            className={`fixed inset-0 z-40 bg-black transition-opacity ${
-              isClosing ? 'duration-300 opacity-0' : 'duration-700 opacity-40'
-            }`}
+            className="fixed inset-0 z-40 bg-black bg-opacity-40"
             onClick={toggleMenu}
           />
           
           <div 
-            ref={menuRef}
             id="mobile-menu"
-            className={`fixed left-0 top-0 h-full w-80 max-w-[85vw] z-50 bg-gradient-to-b from-[var(--pastel-pink)] to-[#fadde9]
-              shadow-xl transform transition-transform duration-500 ease-out
-              ${isClosing ? '-translate-x-full' : isAnimating ? 'translate-x-0' : '-translate-x-full'}
-            `}
-            style={{ 
-              boxShadow: '0 0 20px rgba(0, 0, 0, 0.15)',
-              backdropFilter: 'blur(5px)'
-            }}
+            className="fixed left-0 top-0 h-full w-80 max-w-[85vw] z-50 bg-gradient-to-b from-[var(--pastel-pink)] to-[#fadde9] shadow-xl"
           >
             <div className="flex justify-between items-center p-5 bg-[var(--pastel-menta)] bg-opacity-90 shadow-sm">
               <div className="flex items-center">
