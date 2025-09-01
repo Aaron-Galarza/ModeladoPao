@@ -34,9 +34,10 @@ const CustomFooter = () => {
           {/* Enlaces y Redes a la Derecha */}
           <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-8 text-base">
             <div className="flex flex-wrap justify-center sm:justify-end space-x-4 sm:space-x-6">
-              <a href="#" className="text-[var(--text-color)] hover:text-[var(--pastel-pink)] transition-colors duration-300">Acerca de</a>
+              <a href="#" className="text-[var(--text-color)] hover:text-[var(--pastel-pink)] transition-colors duration-300">Info</a>
               <a href="/catalogo" className="text-[var(--text-color)] hover:text-[var(--pastel-pink)] transition-colors duration-300">Catálogo</a>
-              <a href="#" className="text-[var(--text-color)] hover:text-[var(--pastel-pink)] transition-colors duration-300">Contacto</a>
+                <a href="/" className="text-[var(--text-color)] hover:text-[var(--pastel-pink)] transition-colors duration-300">Contacto</a>
+
             </div>
             <div className="flex space-x-4 mt-2 sm:mt-0">
               <a href="https://www.facebook.com/tupaginadefacebook" target="_blank" rel="noopener noreferrer">

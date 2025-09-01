@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/design/header';
@@ -7,6 +8,9 @@ import CatalogPage from './pages/catalog/catalog';
 import AdminLogin from './pages/admin/login';
 import AdminDashboard from './pages/admin/dashboard';
 import { useAuthStore } from './components/admin/authStore';
+import CartPage from './pages/checkout/cart';
+import CheckoutPage from './pages/checkout/checkout'; // Importa el componente CheckoutPage
+import OrderConfirmationPage from './pages/checkout/orderconfirmation'; // Importa el componente de confirmación
 
 // Componente de ruta protegida
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -35,6 +39,39 @@ function App() {
               <Header />
               <main className="flex-grow pt-16 md:pt-20">
                 <CatalogPage />
+              </main>
+              <Footer />
+            </div>
+          } />
+
+          {/* RUTA DEL CARRITO */}
+          <Route path="/cart" element={
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-grow pt-16 md:pt-20">
+                <CartPage />
+              </main>
+              <Footer />
+            </div>
+          } />
+
+          {/* NUEVA RUTA: CHECKOUT */}
+          <Route path="/checkout" element={
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-grow pt-16 md:pt-20">
+                <CheckoutPage />
+              </main>
+              <Footer />
+            </div>
+          } />
+
+          {/* NUEVA RUTA: CONFIRMACIÓN DEL PEDIDO */}
+          <Route path="/order-confirmation/:orderId" element={
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-grow pt-16 md:pt-20">
+                <OrderConfirmationPage />
               </main>
               <Footer />
             </div>

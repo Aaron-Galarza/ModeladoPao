@@ -26,6 +26,7 @@ const ProductList: React.FC<ProductListProps> = ({ products }) => {
                 products.map(product => (
                     <ProductCard
                         key={product.id}
+                        id={product.id}
                         nombre={product.data.nombre}
                         precio={product.data.precio}
                         descripcionCorta={product.data.descripcion}
