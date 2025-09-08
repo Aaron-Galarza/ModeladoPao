@@ -1,7 +1,6 @@
 import { db } from "../firebase/firebase.config";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
-// Definimos la interfaz del producto para tipado
 export interface Product {
     id: string;
     data: {
@@ -10,18 +9,24 @@ export interface Product {
         descripcion: string;
         categoria: string;
         imagen: string;
+        isActive?: boolean;
     };
 }
 
+// services/products.service.ts
 export async function getProducts(): Promise<Product[]> {
-    const productosCollection = collection(db, "Productos"); // Asegúrate de que el nombre de la colección sea exactamente "Productos"
-    const productosSnapshot = await getDocs(productosCollection);
-    
-    // Mapeamos los documentos para obtener los datos y el ID
-    const productosList = productosSnapshot.docs.map(doc => ({
-        id: doc.id,
-        data: doc.data() as Product['data']
-    }));
-    
-    return productosList;
+    try {
+        const productosCollection = collection(db, "Productos");
+        const productosSnapshot = await getDocs(productosCollection); // Sin el filtro "where"
+
+        const productosList = productosSnapshot.docs.map(doc => ({
+            id: doc.id,
+            data: doc.data() as Product['data']
+        }));
+        
+        return productosList;
+    } catch (error) {
+        console.error("Error en getProducts:", error);
+        throw error;
+    }
 }

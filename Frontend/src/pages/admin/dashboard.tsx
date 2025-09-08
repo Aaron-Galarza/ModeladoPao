@@ -1,260 +1,251 @@
 import React, { useState } from 'react';
-import { useAuthStore } from '../../components/admin/authStore';
-import { useNavigate } from 'react-router-dom';
 import { 
-  FiHome, 
-  FiPackage, 
-  FiUsers, 
-  FiShoppingCart, 
-  FiBarChart2, 
-  FiSettings, 
-  FiLogOut,
-  FiMenu,
-  FiX,
-  FiAlertCircle
-} from 'react-icons/fi';
+  FaClipboardList, FaCashRegister, FaBoxOpen, FaSignOutAlt, 
+  FaThLarge, FaPlusCircle, FaChartLine, FaBox, FaBars, FaTimes 
+} from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../components/admin/authStore';
+// Importa el componente de gestión de productos
+import ProductsManagement from './../managements/productsmanagement';
 
-const AdminDashboard = () => {
-  const { logout, user } = useAuthStore();
+const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
-
-  const menuItems = [
-    { path: '/admin/dashboard', label: 'Dashboard', icon: <FiHome />, active: true },
-    { path: '/admin/products', label: 'Productos', icon: <FiPackage />, active: false },
-    { path: '/admin/categories', label: 'Categorías', icon: <FiBarChart2 />, active: false },
-    { path: '/admin/customers', label: 'Clientes', icon: <FiUsers />, active: false },
-    { path: '/admin/orders', label: 'Pedidos', icon: <FiShoppingCart />, active: false },
-    { path: '/admin/settings', label: 'Configuración', icon: <FiSettings />, active: false },
-  ];
-
-  const statsData = [
-    { title: 'Ventas Hoy', value: '$12,458', change: '+12%', color: '#4caf50' },
-    { title: 'Pedidos', value: '184', change: '+8%', color: '#2196f3' },
-    { title: 'Clientes Nuevos', value: '32', change: '+5%', color: '#ff9800' },
-    { title: 'Productos', value: '156', change: '+3%', color: '#9c27b0' }
-  ];
-
-  const handleNavigation = (path: string, isActive: boolean) => {
-    if (isActive) {
-      navigate(path);
-    } else {
-      setShowComingSoon(true);
-      setTimeout(() => setShowComingSoon(false), 3000);
-    }
-    setSidebarOpen(false);
-  };
+  const { user, isAdmin, logout } = useAuthStore();
+  const [activeSection, setActiveSection] = useState<string>('welcome');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/admin/login');
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+    await logout();
+    navigate('/admin/login');
+  };
+
+  const handleNavigation = (section: string) => {
+    setActiveSection(section);
+    setIsMobileMenuOpen(false);
+  };
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'orders':
+        return (
+          <div className="bg-white p-4 md:p-6 rounded-xl shadow">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Gestión de Pedidos</h2>
+            <p className="text-gray-600">Aquí podrás gestionar todos los pedidos de tu negocio.</p>
+          </div>
+        );
+      case 'sales':
+        return (
+          <div className="bg-white p-4 md:p-6 rounded-xl shadow">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Gestión de Ventas</h2>
+            <p className="text-gray-600">Aquí podrás gestionar y analizar tus ventas.</p>
+          </div>
+        );
+      case 'products':
+        // Renderiza el componente de gestión de productos
+        return <ProductsManagement />;
+      default:
+        return (
+          <>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Bienvenido al Panel de Administración</h1>
+            <p className="text-gray-600 mb-6 md:mb-8">
+              Desde aquí puedes gestionar pedidos, ventas y productos de tu negocio.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
+              {/* Pedidos Card */}
+              <div className="dashboard-card bg-white p-4 md:p-6 rounded-xl shadow border-t-4 border-blue-500">
+                <div className="flex items-center mb-3 md:mb-4">
+                  <div className="bg-blue-100 p-2 md:p-3 rounded-full">
+                    <FaClipboardList className="text-blue-600 text-lg md:text-xl" />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-semibold text-gray-800 ml-3 md:ml-4">Pedidos</h3>
+                </div>
+                <p className="text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
+                  Gestiona y realiza seguimiento a los pedidos de tus clientes.
+                </p>
+                <button 
+                  onClick={() => handleNavigation('orders')}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 md:py-2 md:px-4 rounded-lg transition-colors duration-200 text-sm md:text-base"
+                >
+                  Gestionar Pedidos
+                </button>
+              </div>
+              
+              {/* Ventas Card */}
+              <div className="dashboard-card bg-white p-4 md:p-6 rounded-xl shadow border-t-4 border-green-500">
+                <div className="flex items-center mb-3 md:mb-4">
+                  <div className="bg-green-100 p-2 md:p-3 rounded-full">
+                    <FaCashRegister className="text-green-600 text-lg md:text-xl" />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-semibold text-gray-800 ml-3 md:ml-4">Ventas</h3>
+                </div>
+                <p className="text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
+                  Controla y analiza el rendimiento de tus ventas.
+                </p>
+                <button 
+                  onClick={() => handleNavigation('sales')}
+                  className="w-full bg-green-500 hover:green-600 text-white py-2 px-3 md:py-2 md:px-4 rounded-lg transition-colors duration-200 text-sm md:text-base"
+                >
+                  Ver Reportes
+                </button>
+              </div>
+              
+              {/* Productos Card */}
+              <div className="dashboard-card bg-white p-4 md:p-6 rounded-xl shadow border-t-4 border-purple-500">
+                <div className="flex items-center mb-3 md:mb-4">
+                  <div className="bg-purple-100 p-2 md:p-3 rounded-full">
+                    <FaBoxOpen className="text-purple-600 text-lg md:text-xl" />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-semibold text-gray-800 ml-3 md:ml-4">Productos</h3>
+                </div>
+                <p className="text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
+                  Administra tu inventario y catálogo de productos.
+                </p>
+                <button 
+                  onClick={() => handleNavigation('products')}
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 md:py-2 md:px-4 rounded-lg transition-colors duration-200 text-sm md:text-base"
+                >
+                  Administrar Productos
+                </button>
+              </div>
+            </div>
+            
+            {/* Sección de Acciones Rápidas */}
+            <div className="bg-white p-4 md:p-6 rounded-xl shadow mb-6 md:mb-8">
+              <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-4 md:mb-6">Acciones Rápidas</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                <button className="flex flex-col items-center justify-center p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors duration-200">
+                  <FaPlusCircle className="text-blue-500 text-xl md:text-2xl mb-1 md:mb-2" />
+                  <span className="text-xs md:text-sm font-medium">Nuevo Pedido</span>
+                </button>
+                <button className="flex flex-col items-center justify-center p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-green-50 transition-colors duration-200">
+                  <FaChartLine className="text-green-500 text-xl md:text-2xl mb-1 md:mb-2" />
+                  <span className="text-xs md:text-sm font-medium">Reporte de Ventas</span>
+                </button>
+                <button className="flex flex-col items-center justify-center p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-purple-50 transition-colors duration-200">
+                  <FaBox className="text-purple-500 text-xl md:text-2xl mb-1 md:mb-2" />
+                  <span className="text-xs md:text-sm font-medium">Agregar Producto</span>
+                </button>
+              </div>
+            </div>
+          </>
+        );
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar para desktop */}
-      <div className="hidden md:flex md:w-64 bg-white shadow-lg flex-col">
-        <div className="p-4 border-b">
-          <h1 className="text-xl font-bold text-gray-800">ModeladoPao Admin</h1>
-          <p className="text-sm text-gray-600">Panel de Administración</p>
-        </div>
-        
-        <nav className="flex-1 mt-4">
-          {menuItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => handleNavigation(item.path, item.active)}
-              className={`flex items-center w-full px-4 py-3 transition-colors text-left ${
-                item.active 
-                  ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600' 
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 cursor-not-allowed'
-              }`}
-              disabled={!item.active}
-            >
-              <span className="mr-3">{item.icon}</span>
-              {item.label}
-              {!item.active && (
-                <span className="ml-2 text-xs text-orange-500">Próximamente</span>
-              )}
-            </button>
-          ))}
-        </nav>
-        
-        <div className="p-4 border-t">
-          <div className="mb-4">
-            <p className="text-sm font-medium text-gray-800">Hola, Admin</p>
-            <p className="text-xs text-gray-600">{user?.email || 'Administrador'}</p>
-          </div>
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-gray-900 text-white p-4 flex justify-between items-center">
+        <h2 className="text-xl font-bold">
+          MODELADO <span className="font-light text-gray-400">PAO</span>
+        </h2>
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          {isMobileMenuOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+        </button>
+      </div>
+
+      {/* Sidebar Responsive */}
+      <aside className={`
+        w-full md:w-72 bg-gray-900 text-white flex flex-col p-4 md:p-5 shadow-xl
+        fixed md:static inset-0 z-50 transform transition-transform duration-300
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        {/* Close button for mobile */}
+        <div className="flex justify-between items-center md:hidden mb-6">
+          <h2 className="text-xl font-bold">
+            MODELADO <span className="font-light text-gray-400">PAO</span>
+          </h2>
           <button
-            onClick={handleLogout}
-            className="flex items-center w-full px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded transition-colors"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
           >
-            <FiLogOut className="mr-3" />
-            Cerrar Sesión
+            <FaTimes className="text-xl" />
           </button>
         </div>
-      </div>
 
-      {/* Botón de menú móvil */}
-      <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded shadow"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        {sidebarOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-      </button>
+        <h2 className="hidden md:block text-xl md:text-2xl font-bold text-center mb-8 md:mb-12 mt-2 md:mt-6">
+          MODELADO <span className="font-light text-gray-400">PAO</span>
+        </h2>
+        
+        <nav className="flex-1 space-y-2 md:space-y-3">
+          <button
+            onClick={() => handleNavigation('welcome')}
+            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${ // <-- py-4 y text-base/lg
+              activeSection === 'welcome' 
+                ? 'bg-blue-600 shadow-lg md:transform md:scale-105' 
+                : 'hover:bg-gray-700 md:hover:transform md:hover:scale-105'
+            }`}
+          >
+            <FaThLarge className="mr-4 text-2xl" /> {/* <-- text-2xl y mr-4 */}
+            <span className="text-lg">Inicio</span> {/* <-- text-lg */}
+          </button>
+          
+          <button
+            onClick={() => handleNavigation('orders')}
+            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${ // <-- py-4 y text-base/lg
+              activeSection === 'orders' 
+                ? 'bg-blue-600 shadow-lg md:transform md:scale-105' 
+                : 'hover:bg-gray-700 md:hover:transform md:hover:scale-105'
+            }`}
+          >
+            <FaClipboardList className="mr-4 text-2xl" /> {/* <-- text-2xl y mr-4 */}
+            <span className="text-lg">Pedidos</span> {/* <-- text-lg */}
+          </button>
+          
+          <button
+            onClick={() => handleNavigation('sales')}
+            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${ // <-- py-4 y text-base/lg
+              activeSection === 'sales' 
+                ? 'bg-blue-600 shadow-lg md:transform md:scale-105' 
+                : 'hover:bg-gray-700 md:hover:transform md:hover:scale-105'
+            }`}
+          >
+            <FaCashRegister className="mr-4 text-2xl" /> {/* <-- text-2xl y mr-4 */}
+            <span className="text-lg">Ventas</span> {/* <-- text-lg */}
+          </button>
+          
+          <button
+            onClick={() => handleNavigation('products')}
+            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${ // <-- py-4 y text-base/lg
+              activeSection === 'products' 
+                ? 'bg-blue-600 shadow-lg md:transform md:scale-105' 
+                : 'hover:bg-gray-700 md:hover:transform md:hover:scale-105'
+            }`}
+          >
+            <FaBoxOpen className="mr-4 text-2xl" /> {/* <-- text-2xl y mr-4 */}
+            <span className="text-lg">Productos</span> {/* <-- text-lg */}
+          </button>
+        </nav>
+        
+        <button
+          onClick={handleLogout}
+          className="flex items-center justify-center mt-6 md:mt-8 px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl text-white bg-red-500 hover:bg-red-600 transition-all duration-200 md:hover:transform md:hover:scale-105" // <-- py-4 y text-base/lg
+        >
+          <FaSignOutAlt className="mr-3 text-xl" /> {/* <-- text-xl */}
+          <span className="text-lg">Cerrar Sesión</span> {/* <-- text-lg */}
+        </button>
+      </aside>
 
-      {/* Sidebar móvil */}
-      {sidebarOpen && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-          <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-50 md:hidden">
-            <div className="p-4 border-b">
-              <h1 className="text-xl font-bold text-gray-800">ModeladoPao Admin</h1>
-            </div>
-            <nav className="mt-4">
-              {menuItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => handleNavigation(item.path, item.active)}
-                  className={`flex items-center w-full px-4 py-3 transition-colors text-left ${
-                    item.active 
-                      ? 'text-blue-600 bg-blue-50' 
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 cursor-not-allowed'
-                  }`}
-                  disabled={!item.active}
-                >
-                  <span className="mr-3">{item.icon}</span>
-                  {item.label}
-                  {!item.active && (
-                    <span className="ml-2 text-xs text-orange-500">Próximamente</span>
-                  )}
-                </button>
-              ))}
-            </nav>
-            <div className="absolute bottom-0 w-full p-4 border-t">
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded"
-              >
-                <FiLogOut className="mr-3" />
-                Cerrar Sesión
-              </button>
-            </div>
-          </div>
-        </>
+      {/* Overlay for mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
       )}
 
-      {/* Contenido principal */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard</h1>
-          
-          {/* Notificación de "Próximamente" */}
-          {showComingSoon && (
-            <div className="fixed top-4 right-4 z-50 bg-orange-100 border border-orange-400 text-orange-700 px-4 py-3 rounded-lg shadow-lg flex items-center animate-fadeIn">
-              <FiAlertCircle className="mr-2" />
-              <span>¡Esta funcionalidad estará disponible pronto!</span>
-            </div>
-          )}
-          
-          {/* Estadísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {statsData.map((stat, index) => (
-              <div key={index} className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-gray-600 text-sm font-medium mb-2">{stat.title}</h3>
-                <p className="text-2xl font-bold" style={{ color: stat.color }}>
-                  {stat.value}
-                </p>
-                <span className="text-xs px-2 py-1 rounded-full mt-2 inline-block" 
-                      style={{ backgroundColor: `${stat.color}20`, color: stat.color }}>
-                  {stat.change}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Mensaje de bienvenida */}
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">¡Bienvenido al Panel de Administración!</h2>
-            <p className="text-gray-600 mb-4">
-              Desde aquí puedes gestionar productos, categorías, pedidos y configuraciones de tu tienda.
-            </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-blue-800 text-sm">
-                <strong>Nota:</strong> Por ahora solo el Dashboard está disponible. Las demás secciones 
-                (Productos, Categorías, etc.) se habilitarán próximamente.
-              </p>
-            </div>
-          </div>
-
-          {/* Secciones de ejemplo */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">Pedidos Recientes</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="font-medium">#ORD-001</span>
-                  <span className="text-green-600 text-sm font-medium">Completado</span>
-                  <span className="text-gray-600">$45.90</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="font-medium">#ORD-002</span>
-                  <span className="text-yellow-600 text-sm font-medium">Pendiente</span>
-                  <span className="text-gray-600">$89.50</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="font-medium">#ORD-003</span>
-                  <span className="text-green-600 text-sm font-medium">Completado</span>
-                  <span className="text-gray-600">$120.00</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">Resumen General</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="text-gray-600">Productos activos:</span>
-                  <span className="font-semibold text-gray-800">142</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="text-gray-600">Pedidos este mes:</span>
-                  <span className="font-semibold text-gray-800">284</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="text-gray-600">Ingresos mensuales:</span>
-                  <span className="font-semibold text-green-600">$8,742</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="text-gray-600">Clientes registrados:</span>
-                  <span className="font-semibold text-gray-800">1,248</span>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+        <div className="max-w-6xl mx-auto">
+          {renderContent()}
         </div>
-      </div>
-
-      {/* Estilos para la animación */}
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-      `}</style>
+      </main>
     </div>
   );
 };
 
-export default AdminDashboard;
+export default Dashboard;

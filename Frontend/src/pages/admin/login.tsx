@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaUserShield, FaSpinner } from 'react-icons/fa';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+// Importa el método setPersistence y la constante browserLocalPersistence
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth } from '../../firebase/firebase.config';
 import { useAuthStore } from '../../components/admin/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +31,10 @@ const AdminLogin = () => {
     setError('');
 
     try {
+      // 1. Establecer la persistencia de la sesión a 'LOCAL'
+      await setPersistence(auth, browserLocalPersistence);
+
+      // 2. Iniciar sesión con email y contraseña
       const userCredential = await signInWithEmailAndPassword(
         auth, 
         formData.email, 

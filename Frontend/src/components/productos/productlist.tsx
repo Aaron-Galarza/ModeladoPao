@@ -30,7 +30,7 @@ const ProductList: React.FC<ProductListProps> = ({ products }) => {
                         nombre={product.data.nombre}
                         precio={product.data.precio}
                         descripcionCorta={product.data.descripcion}
-                        imagen={product.data.imagenURL} // <-- Corregido para usar la propiedad 'imagenURL'
+                        imagenURL={product.data.imagenURL} // <-- Corregido para usar la propiedad 'imagenURL'
                     />
                 ))
             ) : (

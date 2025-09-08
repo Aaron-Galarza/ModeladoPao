@@ -7,10 +7,11 @@ import HomePage from './pages/home';
 import CatalogPage from './pages/catalog/catalog';
 import AdminLogin from './pages/admin/login';
 import AdminDashboard from './pages/admin/dashboard';
+import ProductsManagement from './pages/managements/productsmanagement'; // Importa el componente
 import { useAuthStore } from './components/admin/authStore';
 import CartPage from './pages/checkout/cart';
-import CheckoutPage from './pages/checkout/checkout'; // Importa el componente CheckoutPage
-import OrderConfirmationPage from './pages/checkout/orderconfirmation'; // Importa el componente de confirmación
+import CheckoutPage from './pages/checkout/checkout';
+import OrderConfirmationPage from './pages/checkout/orderconfirmation';
 
 // Componente de ruta protegida
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -55,7 +56,7 @@ function App() {
             </div>
           } />
 
-          {/* NUEVA RUTA: CHECKOUT */}
+          {/* RUTA: CHECKOUT */}
           <Route path="/checkout" element={
             <div className="flex flex-col min-h-screen">
               <Header />
@@ -66,7 +67,7 @@ function App() {
             </div>
           } />
 
-          {/* NUEVA RUTA: CONFIRMACIÓN DEL PEDIDO */}
+          {/* RUTA: CONFIRMACIÓN DEL PEDIDO */}
           <Route path="/order-confirmation/:orderId" element={
             <div className="flex flex-col min-h-screen">
               <Header />
@@ -91,6 +92,13 @@ function App() {
           <Route path="/admin/dashboard" element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* NUEVA RUTA: Gestión de Productos (Dentro del panel admin) */}
+          <Route path="/admin/products" element={
+            <ProtectedRoute>
+              <ProductsManagement />
             </ProtectedRoute>
           } />
 

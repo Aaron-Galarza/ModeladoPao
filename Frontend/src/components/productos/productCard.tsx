@@ -7,11 +7,11 @@ interface ProductCardProps {
     nombre: string;
     precio: number;
     descripcionCorta: string;
-    imagen: string;
+    imagenURL: string; // <-- Cambiado de 'imagen' a 'imagenURL'
     
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ id, nombre, precio, descripcionCorta, imagen }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ id, nombre, precio, descripcionCorta, imagenURL }) => { // <-- Aquí también
     // Obtenemos la función addItem y openCart de tu store de Zustand
     const addItem = useCartStore(state => state.addItem);
     const openCart = useCartStore(state => state.openCart);
@@ -23,7 +23,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, nombre, precio, descripci
             id,
             name: nombre,
             price: precio,
-            image: imagen,
+            image: imagenURL, // <-- Usamos imagenURL aquí
         };
         
         addItem(productToAdd);
@@ -35,7 +35,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, nombre, precio, descripci
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-xl group">
             {/* Imagen del producto */}
             <img
-                src={imagen}
+                src={imagenURL} // <-- Usamos imagenURL aquí
                 alt={nombre}
                 className="w-full h-68 object-cover object-center"
             />
@@ -55,9 +55,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, nombre, precio, descripci
                 <button 
                     onClick={handleAddToCart}
                     className="w-full py-1 rounded-lg text-lg font-bold font-poppins transition-all duration-300 
-                               bg-[var(--link-hover)] text-white 
-                               hover:bg-[var(--pastel-menta)] hover:text-gray-800 
-                               shadow-md group-hover:shadow-lg filter drop-shadow-sm" 
+                                 bg-[var(--link-hover)] text-white 
+                                 hover:bg-[var(--pastel-menta)] hover:text-gray-800 
+                                 shadow-md group-hover:shadow-lg filter drop-shadow-sm" 
                 >
                     Agregar al carrito
                 </button>
