@@ -5,8 +5,9 @@ import {
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../components/admin/authStore';
-// Importa el componente de gestión de productos
+// Importa los componentes de gestión
 import ProductsManagement from './../managements/productsmanagement';
+import OrdersManagement from './../managements/ordersmanagement';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -27,12 +28,7 @@ const Dashboard: React.FC = () => {
   const renderContent = () => {
     switch (activeSection) {
       case 'orders':
-        return (
-          <div className="bg-white p-4 md:p-6 rounded-xl shadow">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Gestión de Pedidos</h2>
-            <p className="text-gray-600">Aquí podrás gestionar todos los pedidos de tu negocio.</p>
-          </div>
-        );
+        return <OrdersManagement />;
       case 'sales':
         return (
           <div className="bg-white p-4 md:p-6 rounded-xl shadow">
@@ -41,7 +37,6 @@ const Dashboard: React.FC = () => {
           </div>
         );
       case 'products':
-        // Renderiza el componente de gestión de productos
         return <ProductsManagement />;
       default:
         return (
@@ -151,7 +146,7 @@ const Dashboard: React.FC = () => {
       {/* Sidebar Responsive */}
       <aside className={`
         w-full md:w-72 bg-gray-900 text-white flex flex-col p-4 md:p-5 shadow-xl
-        fixed md:static inset-0 z-50 transform transition-transform duration-300
+        fixed md:static inset-0 z-48 transform transition-transform duration-300
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {/* Close button for mobile */}
@@ -174,59 +169,59 @@ const Dashboard: React.FC = () => {
         <nav className="flex-1 space-y-2 md:space-y-3">
           <button
             onClick={() => handleNavigation('welcome')}
-            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${ // <-- py-4 y text-base/lg
+            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${
               activeSection === 'welcome' 
                 ? 'bg-blue-600 shadow-lg md:transform md:scale-105' 
                 : 'hover:bg-gray-700 md:hover:transform md:hover:scale-105'
             }`}
           >
-            <FaThLarge className="mr-4 text-2xl" /> {/* <-- text-2xl y mr-4 */}
-            <span className="text-lg">Inicio</span> {/* <-- text-lg */}
+            <FaThLarge className="mr-4 text-2xl" />
+            <span className="text-lg">Inicio</span>
           </button>
           
           <button
             onClick={() => handleNavigation('orders')}
-            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${ // <-- py-4 y text-base/lg
+            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${
               activeSection === 'orders' 
                 ? 'bg-blue-600 shadow-lg md:transform md:scale-105' 
                 : 'hover:bg-gray-700 md:hover:transform md:hover:scale-105'
             }`}
           >
-            <FaClipboardList className="mr-4 text-2xl" /> {/* <-- text-2xl y mr-4 */}
-            <span className="text-lg">Pedidos</span> {/* <-- text-lg */}
+            <FaClipboardList className="mr-4 text-2xl" />
+            <span className="text-lg">Pedidos</span>
           </button>
           
           <button
             onClick={() => handleNavigation('sales')}
-            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${ // <-- py-4 y text-base/lg
+            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${
               activeSection === 'sales' 
                 ? 'bg-blue-600 shadow-lg md:transform md:scale-105' 
                 : 'hover:bg-gray-700 md:hover:transform md:hover:scale-105'
             }`}
           >
-            <FaCashRegister className="mr-4 text-2xl" /> {/* <-- text-2xl y mr-4 */}
-            <span className="text-lg">Ventas</span> {/* <-- text-lg */}
+            <FaCashRegister className="mr-4 text-2xl" />
+            <span className="text-lg">Ventas</span>
           </button>
           
           <button
             onClick={() => handleNavigation('products')}
-            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${ // <-- py-4 y text-base/lg
+            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${
               activeSection === 'products' 
                 ? 'bg-blue-600 shadow-lg md:transform md:scale-105' 
                 : 'hover:bg-gray-700 md:hover:transform md:hover:scale-105'
             }`}
           >
-            <FaBoxOpen className="mr-4 text-2xl" /> {/* <-- text-2xl y mr-4 */}
-            <span className="text-lg">Productos</span> {/* <-- text-lg */}
+            <FaBoxOpen className="mr-4 text-2xl" />
+            <span className="text-lg">Productos</span>
           </button>
         </nav>
         
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center mt-6 md:mt-8 px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl text-white bg-red-500 hover:bg-red-600 transition-all duration-200 md:hover:transform md:hover:scale-105" // <-- py-4 y text-base/lg
+          className="flex items-center justify-center mt-6 md:mt-8 px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl text-white bg-red-500 hover:bg-red-600 transition-all duration-200 md:hover:transform md:hover:scale-105"
         >
-          <FaSignOutAlt className="mr-3 text-xl" /> {/* <-- text-xl */}
-          <span className="text-lg">Cerrar Sesión</span> {/* <-- text-lg */}
+          <FaSignOutAlt className="mr-3 text-xl" />
+          <span className="text-lg">Cerrar Sesión</span>
         </button>
       </aside>
 
