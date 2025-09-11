@@ -58,7 +58,7 @@ const CustomFooter = () => {
 
         {/* Sección Inferior: Copyright, Correo y Desarrollador */}
         <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600 space-y-2 sm:space-y-0">
-          <span className="text-sm text-gray-600">© 2025 <a href="/" className="hover:underline">Modelado Pao</a>. Todos los derechos reservados.</span>
+          <span className="text-sm text-gray-600">© 2025 <a href="/" className="hover:underline">Modelado Pao</a></span>
           
           {/* Correo de AFDevelopers centrado con CSS */}
           <a href="mailto:AFdevelopers12@gmail.com" className="footer-email hidden md:flex items-center space-x-2 text-sm text-[var(--text-color)] hover:underline transition-colors duration-300">
