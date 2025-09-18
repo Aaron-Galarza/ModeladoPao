@@ -4,9 +4,6 @@ import {
   query, 
   orderBy, 
   onSnapshot, 
-  updateDoc, 
-  doc, 
-  serverTimestamp,
   Timestamp 
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase.config";
@@ -19,8 +16,16 @@ import {
   FaUser,
   FaMapMarkerAlt
 } from "react-icons/fa";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { getAuth } from "firebase/auth";
 
-// Interfaces (pueden mantenerse igual)
+// Define la interfaz para los datos que recibe la Cloud Function
+interface IUpdateOrderStatusData {
+    orderId: string;
+    newStatus: string;
+}
+
+// Define las interfaces de los datos del pedido
 interface OrderProduct {
   idProducto: string;
   quantity: number;
@@ -44,12 +49,16 @@ interface OrderDetails {
   updatedAt?: Timestamp | Date;
 }
 
+// Se crea la referencia a la Cloud Function fuera del componente
+const updateOrderStatusCallable = httpsCallable<IUpdateOrderStatusData, any>(getFunctions(), 'updateOrderStatus');
+
 const OrdersManagement = () => {
   const [allOrders, setAllOrders] = useState<OrderDetails[]>([]);
   const [filter, setFilter] = useState<string>("all");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // UseEffect para el listener de Firestore
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -113,6 +122,7 @@ const OrdersManagement = () => {
     }
   }, []);
 
+  // La función useMemo se mantiene igual
   const filteredOrders = useMemo(() => {
     if (filter === "all") {
       return allOrders;
@@ -120,19 +130,31 @@ const OrdersManagement = () => {
     return allOrders.filter(order => order.status === filter);
   }, [allOrders, filter]);
 
-  const updateOrderStatus = async (orderId: string, newStatus: OrderDetails['status']) => {
+  // LA FUNCIÓN MODIFICADA PARA LLAMAR A LA CLOUD FUNCTION
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderDetails['status']) => {
     try {
-      const orderRef = doc(db, "Pedidos", orderId);
-      await updateDoc(orderRef, {
-        status: newStatus,
-        updatedAt: serverTimestamp()
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error("No hay usuario autenticado. Debes iniciar sesión.");
+      }
+      
+      // Llamada a la Cloud Function
+      const result = await updateOrderStatusCallable({ 
+        orderId: orderId, 
+        newStatus: newStatus 
       });
+
+      console.log("Respuesta de la Cloud Function:", result.data.message);
+
     } catch (error: any) {
-      console.error("Error actualizando estado del pedido:", error);
+      console.error("Error al llamar a la Cloud Function:", error.message);
       setError(`Error al actualizar el estado: ${error.message}`);
     }
   };
 
+  // El resto de las funciones de ayuda se mantienen igual
   const openWhatsApp = (phone: string, guestName: string) => {
     const cleanPhone = phone.replace(/\D/g, '');
     let formattedPhone;
@@ -357,50 +379,31 @@ const OrdersManagement = () => {
                 )}
               </div>
               
-              {/* Footer con acciones - El botón de WSP ha sido eliminado */}
+              {/* Footer con acciones */}
               <div className="bg-gray-50 p-4 flex flex-wrap gap-2 border-t border-gray-200">
-                {order.status === "pending" && (
-                  <>
+                {order.status !== "delivered" && order.status !== "cancelled" && (
                     <button
-                      onClick={() => updateOrderStatus(order.id, "in-progress")}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
-                    >
-                      Marcar En Proceso
-                    </button>
-                    <button
-                      onClick={() => updateOrderStatus(order.id, "cancelled")}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
-                    >
-                      Cancelar Pedido
-                    </button>
-                  </>
-                )}
-                {order.status === "in-progress" && (
-                  <>
-                    <button
-                      onClick={() => updateOrderStatus(order.id, "delivered")}
+                      onClick={() => handleUpdateOrderStatus(order.id, "delivered")}
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
                     >
                       Marcar como Entregado
                     </button>
-                    <button
-                      onClick={() => updateOrderStatus(order.id, "cancelled")}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
-                    >
-                      Cancelar Pedido
-                    </button>
-                  </>
                 )}
-                {order.status === "cancelled" && (
+                {order.status !== "cancelled" && (
                   <button
-                    onClick={() => updateOrderStatus(order.id, "pending")}
-                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                    onClick={() => handleUpdateOrderStatus(order.id, "cancelled")}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
                   >
-                    Restaurar a Pendiente
+                    Cancelar Pedido
                   </button>
                 )}
-                {order.status === "delivered" && (
-                  <span className="text-gray-500 text-sm">Pedido finalizado</span>
+                {order.status !== "in-progress" && (
+                  <button
+                    onClick={() => handleUpdateOrderStatus(order.id, "in-progress")}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                  >
+                    Marcar En Proceso
+                  </button>
                 )}
               </div>
             </div>

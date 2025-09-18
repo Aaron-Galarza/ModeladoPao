@@ -11,5 +11,6 @@ import * as userController from "./controllers/userController";
 // Exportamos las funciones para que Firebase las detecte
 exports.listarProductos = productsController.listarProductos;
 exports.crearPedido = ordersController.crearPedido;
+exports.updateOrderStatus = ordersController.updateOrderStatus;
 exports.createProduct = productsController.createProduct;
 exports.loginAdmin = userController.loginAdmin;
