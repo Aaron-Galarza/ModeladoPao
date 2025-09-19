@@ -7,6 +7,7 @@ import CatalogPage from './pages/catalog/catalog';
 import AdminLogin from './pages/admin/login';
 import AdminDashboard from './pages/admin/dashboard';
 import ProductsManagement from './pages/managements/productsmanagement';
+import VentasManagement from './pages/managements/ventasmanagement'; // Importación añadida
 import { useAuthStore } from './components/admin/authStore';
 import CartPage from './pages/checkout/cart';
 import CheckoutPage from './pages/checkout/checkout';
@@ -24,11 +25,11 @@ const PublicLayout = () => (
   </div>
 );
 
-// Componente de layout para rutas de administración (ahora con Header, Footer y padding)
+// Componente de layout para rutas de administración (ahora con Header y padding)
 const AdminLayout = () => (
   <div className="flex flex-col min-h-screen">
     <Header />
-    <main className="flex-grow pt-16 md:pt-20"> {/* <--- ¡AQUÍ ESTÁ LA SOLUCIÓN! */}
+    <main className="flex-grow pt-16 md:pt-20">
       <Outlet />
     </main>
   </div>
@@ -82,6 +83,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/products" element={<ProductsManagement />} />
+              <Route path="/admin/ventas" element={<VentasManagement />} /> {/* Nueva ruta para VentasManagement */}
             </Route>
           </Route>
           
