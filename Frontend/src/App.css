@@ -27,44 +27,8 @@ body {
 
 /* Si quieres que solo CatalogPage tenga el fondo, elimina lo anterior y usa esto: */
 
-/* Asegura que todos los contenedores principales ocupen todo el espacio */
-.catalog-page {
-    background-image: url(../src/assets/images/fondo.jpg);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    min-height: 100vh; /* Forza altura mínima */
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
 
-/* Capa que asegura que el fondo cubra TODO */
-.catalog-page::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url(../src/assets/images/fondo.jpg);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    z-index: -1; /* Detrás del contenido */
-}
 
-/* Contenedor del contenido */
-.catalog-content {
-    flex: 1; /* Ocupa todo el espacio disponible */
-    position: relative;
-    z-index: 1; /* Encima del fondo */
-}
 
 /* Elimina cualquier margen o padding por defecto */
 * {
@@ -80,6 +44,8 @@ body {
   --link-hover: #f188af;
   --background-color: #ffffff;
   --pastel-menta: #87cfbc;
+  --footer:#e9bdcf; 
+  --hover:#6da899;
 }
 
 .bg-pastel-pink {

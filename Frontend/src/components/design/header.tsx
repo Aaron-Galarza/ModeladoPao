@@ -66,7 +66,7 @@ const Header = () => {
   const mainCategories = [
     { name: "Inicio", path: "/", icon: <FaHome className="text-lg" /> },
     { name: "Catálogo", path: "/catalogo", icon: <FaTh className="text-lg" /> },
-    { name: "Acerca de", path: "/acerca-de", icon: <FaInfoCircle className="text-lg" /> }
+    { name: "Acerca de", path: "/info", icon: <FaInfoCircle className="text-lg" /> }
   ];
 
   return (

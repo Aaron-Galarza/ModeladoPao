@@ -13,7 +13,7 @@ import CartPage from './pages/checkout/cart';
 import CheckoutPage from './pages/checkout/checkout';
 import OrderConfirmationPage from './pages/checkout/orderconfirmation';
 import { FaSpinner } from 'react-icons/fa';
-
+import Info from './pages/info/info'
 // Componente de layout para rutas públicas
 const PublicLayout = () => (
   <div className="flex flex-col min-h-screen">
@@ -75,7 +75,9 @@ function App() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
             <Route path="/admin/login" element={user && isAdmin ? <Navigate to="/admin/dashboard" /> : <AdminLogin />} />
-          </Route>
+            <Route path="/info" element={<Info />} />
+
+</Route>
 
           {/* Rutas de administración con su propio layout */}
           <Route element={<AdminLayout />}>
