@@ -8,7 +8,7 @@ export interface Product {
         precio: number;
         descripcion: string;
         categoria: string;
-        imagen: string;
+        imagenURL: string;
         isActive?: boolean;
     };
 }
