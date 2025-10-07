@@ -101,26 +101,7 @@ const Dashboard: React.FC = () => {
                 </button>
               </div>
             </div>
-            
-            {/* Sección de Acciones Rápidas */}
-            <div className="bg-white p-4 md:p-6 rounded-xl shadow mb-6 md:mb-8">
-              <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-4 md:mb-6">Acciones Rápidas</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-                <button className="flex flex-col items-center justify-center p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors duration-200">
-                  <FaPlusCircle className="text-blue-500 text-xl md:text-2xl mb-1 md:mb-2" />
-                  <span className="text-xs md:text-sm font-medium">Nuevo Pedido</span>
-                </button>
-                <button className="flex flex-col items-center justify-center p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-green-50 transition-colors duration-200">
-                  <FaChartLine className="text-green-500 text-xl md:text-2xl mb-1 md:mb-2" />
-                  <span className="text-xs md:text-sm font-medium">Reporte de Ventas</span>
-                </button>
-                <button className="flex flex-col items-center justify-center p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-purple-50 transition-colors duration-200">
-                  <FaBox className="text-purple-500 text-xl md:text-2xl mb-1 md:mb-2" />
-                  <span className="text-xs md:text-sm font-medium">Agregar Producto</span>
-                </button>
-              </div>
-            </div>
-          </>
+        </>
         );
     }
   };
@@ -128,7 +109,7 @@ const Dashboard: React.FC = () => {
   // El resto del componente Dashboard (return...) sigue igual.
   
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+  <div className="flex h-screen bg-gray-100"> 
       {/* Mobile Header */}
       <div className="md:hidden bg-gray-900 text-white p-4 flex justify-between items-center">
         <h2 className="text-xl font-bold">
@@ -143,11 +124,11 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Sidebar Responsive */}
-      <aside className={`
-        w-full md:w-72 bg-gray-900 text-white flex flex-col p-4 md:p-5 shadow-xl
-        fixed md:static inset-0 z-48 transform transition-transform duration-300
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
+    <aside className={`
+      w-full md:w-72 bg-gray-900 text-white flex flex-col p-4 md:p-5 shadow-xl
+      fixed md:fixed md:inset-y-0 z-48 transform transition-transform duration-300
+      ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+    `}>
         {/* Close button for mobile */}
         <div className="flex justify-between items-center md:hidden mb-6">
           <h2 className="text-xl font-bold">
@@ -233,8 +214,9 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
+     {/* Agregamos el padding izquierdo para compensar el sidebar fijo */}
+    <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto md:ml-72"> 
+      <div className="max-w-6xl mx-auto">
           {renderContent()}
         </div>
       </main>
