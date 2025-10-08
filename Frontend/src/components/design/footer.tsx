@@ -34,19 +34,17 @@ const CustomFooter = () => {
           {/* Enlaces y Redes a la Derecha */}
           <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-8 text-base">
             <div className="flex flex-wrap justify-center sm:justify-end space-x-4 sm:space-x-6">
-              <a href="#" className="text-[var(--text-color)] hover:text-[var(--hover)] transition-colors duration-300">Info</a>
+              <a href="/info" className="text-[var(--text-color)] hover:text-[var(--hover)] transition-colors duration-300">Info</a>
               <a href="/catalogo" className="text-[var(--text-color)] hover:text-[var(--hover)] transition-colors duration-300">Catálogo</a>
                 <a href="/" className="text-[var(--text-color)] hover:text-[var(--hover)] transition-colors duration-300">Contacto</a>
 
             </div>
             <div className="flex space-x-4 mt-2 sm:mt-0">
-              <a href="https://www.facebook.com/tupaginadefacebook" target="_blank" rel="noopener noreferrer">
-                <FaFacebook size={20} className="text-gray-700 hover:text-[var(--pastel-menta)] transition-colors duration-300" />
-              </a>
-              <a href="https://www.instagram.com/tuperfildeinstagram" target="_blank" rel="noopener noreferrer">
+           
+              <a href="https://www.instagram.com/modeladopao/" target="_blank" rel="noopener noreferrer">
                 <FaInstagram size={20} className="text-gray-700 hover:text-[var(--pastel-menta)] transition-colors duration-300" />
               </a>
-              <a href="https://wa.me/tunumerodetelefono" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/543624088244" target="_blank" rel="noopener noreferrer">
                 <FaWhatsapp size={20} className="text-gray-700 hover:text-[var(--pastel-menta)] transition-colors duration-300" />
               </a>
             </div>

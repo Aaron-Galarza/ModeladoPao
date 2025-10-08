@@ -40,6 +40,7 @@ body {
   --font-nav: 'Quicksand', sans-serif;
   --font-mobile-nav: 'Lora', serif;
   --pastel-pink: #F8C8DC; 
+  --pastel-pink2:#f29ab7;
   --text-color: #333;
   --link-hover: #f188af;
   --background-color: #ffffff;
@@ -70,7 +71,7 @@ body {
 @media (min-width: 768px) {
   .footer-email {
     position: absolute;
-    left: 48.7%;
+    left: 49.9%;
     transform: translateX(-50%);
   }
 }
@@ -118,3 +119,4 @@ body {
     align-items: center;
     width: 100%;
 }
+.font-cursive { font-family: 'Playfair Display', serif; }

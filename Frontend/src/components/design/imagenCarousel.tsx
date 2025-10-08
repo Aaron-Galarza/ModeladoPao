@@ -1,244 +1,180 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-import chavoPC from '../../assets/images/chavez.jpg';
-import chavoMovil from '../../assets/images/chavo-movil.jpg';
-import leonPC from '../../assets/images/escandalosos-pc.jpg';
-import leonMovil from '../../assets/images/escandalosos-movil.jpg';
-import sirenitaPC from '../../assets/images/sirenita-pc.jpg';
-import sirenitaMovil from '../../assets/images/sirenita-movil.jpg';
+import Kity from '../../assets/images/kity.jpeg';
+import Hada from '../../assets/images/hada.jpeg';
+import Sirenita from '../../assets/images/pokemon.jpeg';
 
+// Slides con una sola imagen
 const images = [
-    { pc: chavoPC, movil: chavoMovil, title: "Personajes Divertidos", description: "Figuras únicas de tus personajes favoritos" },
-    { pc: leonPC, movil: leonMovil, title: "Animales Salvajes", description: "Variedad de animales", customClass: "object-scale-down md:object-cover" },
-    { pc: sirenitaPC, movil: sirenitaMovil, title: "Mundo Marino", description: "Explora las profundidades con nuestras creaciones" },
+  { src: Kity, },
+  { src: Hada,  },
+  { src: Sirenita },
 ];
 
-const ImageCarousel: React.FC = () => {
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [isTransitioning, setIsTransitioning] = useState(false);
-    const [touchStartX, setTouchStartX] = useState(0);
-    const [touchEndX, setTouchEndX] = useState(0);
-    const [carouselLoaded, setCarouselLoaded] = useState(false);
+type Props = {
+  pausedExternal?: boolean; // Pausa externa (viewport, etc.)
+};
 
-    // Animación de entrada del carrusel
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setCarouselLoaded(true);
-        }, 300);
-        
-        return () => clearTimeout(timer);
-    }, []);
+const AUTOPLAY_MS = 5000;
+const TRANSITION_MS = 700;
 
-    const nextSlide = useCallback(() => {
-        if (isTransitioning) return;
-        setIsTransitioning(true);
-        setCurrentImageIndex(prevIndex => (prevIndex === images.length - 1 ? 0 : prevIndex + 1));
-    }, [isTransitioning]);
+const ImageCarousel: React.FC<Props> = ({ pausedExternal = false }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [carouselLoaded, setCarouselLoaded] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
 
-    const prevSlide = useCallback(() => {
-        if (isTransitioning) return;
-        setIsTransitioning(true);
-        setCurrentImageIndex(prevIndex => (prevIndex === 0 ? images.length - 1 : prevIndex - 1));
-    }, [isTransitioning]);
+  // Timer estable
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const handleDotClick = (index: number) => {
-        if (isTransitioning || index === currentImageIndex) return;
-        setIsTransitioning(true);
-        setCurrentImageIndex(index);
-    };
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
-    const handleTouchStart = (e: React.TouchEvent) => {
-        setTouchStartX(e.touches[0].clientX);
-    };
+  const startTimer = useCallback(() => {
+    if (pausedExternal) return;
+    clearTimer();
+    timerRef.current = setTimeout(() => {
+      nextSlide();
+    }, AUTOPLAY_MS);
+  }, [clearTimer, pausedExternal]);
 
-    const handleTouchMove = (e: React.TouchEvent) => {
-        setTouchEndX(e.touches[0].clientX);
-    };
+  const resetTimer = useCallback(() => {
+    clearTimer();
+    startTimer();
+  }, [clearTimer, startTimer]);
 
-    const handleTouchEnd = () => {
-        if (isTransitioning) return;
-        const distance = touchStartX - touchEndX;
-        const minSwipeDistance = 80;
+  // Montaje suave
+  useEffect(() => {
+    const t = setTimeout(() => setCarouselLoaded(true), 300);
+    return () => clearTimeout(t);
+  }, []);
 
-        if (Math.abs(distance) < minSwipeDistance) return;
-        
-        if (distance > 0) {
-            nextSlide();
-        } else {
-            prevSlide();
-        }
+  // Avance
+  const nextSlide = useCallback(() => {
+    if (isTransitioning) return; // evita doble disparo
+    setIsTransitioning(true);
+    setCurrentImageIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
+  }, [isTransitioning]);
 
-        setTouchStartX(0);
-        setTouchEndX(0);
-    };
+  const prevSlide = useCallback(() => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setCurrentImageIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
+  }, [isTransitioning]);
 
-    // Auto-advance
-    useEffect(() => {
-        if (isTransitioning) return;
-        
-        const interval = setInterval(() => {
-            nextSlide();
-        }, 5000);
+  // Fin de la transición → liberamos y rearmamos timer
+  useEffect(() => {
+    if (!isTransitioning) return;
+    const t = setTimeout(() => {
+      setIsTransitioning(false);
+      resetTimer(); // mantiene cadencia constante post-animación
+    }, TRANSITION_MS);
+    return () => clearTimeout(t);
+  }, [isTransitioning, resetTimer]);
 
-        return () => clearInterval(interval);
-    }, [currentImageIndex, isTransitioning, nextSlide]);
+  // Arranque/pausa externa
+  useEffect(() => {
+    if (pausedExternal) {
+      clearTimer();
+    } else {
+      startTimer();
+    }
+    return () => clearTimer();
+  }, [pausedExternal, startTimer, clearTimer]);
 
-    useEffect(() => {
-        if (isTransitioning) {
-            const timer = setTimeout(() => setIsTransitioning(false), 700);
-            return () => clearTimeout(timer);
-        }
-    }, [isTransitioning]);
+  // Interacción del usuario → reiniciar contador
+  const handleDotClick = (index: number) => {
+    if (isTransitioning || index === currentImageIndex) return;
+    setIsTransitioning(true);
+    setCurrentImageIndex(index);
+    resetTimer();
+  };
 
-    return (
-        <div
-            className={`relative w-full overflow-hidden h-full bg-black transition-all duration-1000 ${
-                carouselLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-            }`}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            aria-roledescription="carousel"
-            // Contorno negro difuminado elegante
-            style={{
-                boxShadow: `
-                    0 0 0 1px rgba(0, 0, 0, 0.3),
-                    0 4px 20px rgba(0, 0, 0, 0.5),
-                    0 8px 40px rgba(0, 0, 0, 0.4),
-                    inset 0 0 0 1px rgba(255, 255, 255, 0.1)
-                `,
-                borderRadius: '12px' // Bordes redondeados suaves
-            }}
-        >
-            {/* Slides individuales con animación mejorada */}
-            <div className="absolute inset-0">
-                {images.map((image, index) => (
-                    <div
-                        key={index}
-                        className={`
-                            absolute inset-0 w-full h-full transition-all duration-700 ease-out transform-gpu
-                            ${index === currentImageIndex 
-                                ? 'opacity-100 scale-100 z-10' 
-                                : 'opacity-0 scale-105 pointer-events-none z-0'
-                            }
-                        `}
-                        style={{
-                            borderRadius: '12px', // Coherencia con el contenedor
-                            overflow: 'hidden' // Para que las imágenes respeten el border-radius
-                        }}
-                    >
-                        <picture className="w-full h-full block">
-                            <source media="(min-width: 768px)" srcSet={image.pc} />
-                            <img
-                                src={image.movil}
-                                alt={`Slide ${index + 1}`}
-                                draggable={false}
-                                className={`w-full h-full ${image.customClass || 'object-cover'} block transition-transform duration-1000 ${
-                                    index === currentImageIndex ? 'scale-100' : 'scale-110'
-                                }`}
-                                style={{
-                                    borderRadius: '12px' // Bordes redondeados en las imágenes
-                                }}
-                            />
-                        </picture>
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0].clientX);
+  const handleTouchMove = (e: React.TouchEvent) => setTouchEndX(e.touches[0].clientX);
+  const handleTouchEnd = () => {
+    const distance = touchStartX - touchEndX;
+    const minSwipe = 80;
+    if (Math.abs(distance) >= minSwipe) {
+      if (distance > 0) nextSlide();
+      else prevSlide();
+      resetTimer();
+    }
+    setTouchStartX(0);
+    setTouchEndX(0);
+  };
 
-                        {/* Overlay con gradiente mejorado */}
-                        <div 
-                            className={`absolute inset-0 flex flex-col justify-end pb-24 p-6 md:p-8 text-white transition-all duration-1000 ${
-                                index === currentImageIndex ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-                            }`}
-                            style={{
-                                background: `
-                                    linear-gradient(
-                                        180deg, 
-                                        transparent 0%, 
-                                        rgba(0, 0, 0, 0.1) 30%, 
-                                        rgba(0, 0, 0, 0.3) 50%, 
-                                        rgba(0, 0, 0, 0.7) 70%, 
-                                        rgba(0, 0, 0, 0.9) 100%
-                                    )
-                                `,
-                                borderRadius: '12px'
-                            }}
-                        >
-                            <h2 className="text-2xl md:text-3xl font-bold font-cursive mb-2 drop-shadow-lg">
-                                {image.title}
-                            </h2>
-                            <p className="text-lg md:text-xl font-sans max-w-md drop-shadow-lg">
-                                {image.description}
-                            </p>
-                        </div>
-                    </div>
-                ))}
-            </div>
+  return (
+    <div
+      className={`
+        relative w-full mx-auto
+        h-[550px] md:h-[530px]
+        md:max-w-[900px]
+        overflow-hidden bg-black transition-all duration-1000
+        ${carouselLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
+      `}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      aria-roledescription="carousel"
+      style={{
+        boxShadow: `
+          0 2px 8px rgba(0,0,0,0.25),
+          0 4px 12px rgba(0,0,0,0.25),
+          inset 0 0 0 1px rgba(255,255,255,0.05)
+        `,
+        borderRadius: '12px',
+      }}
+    >
+      {/* Slides */}
+      <div className="absolute inset-0">
+        {images.map((image, index) => (
+          <div
+            key={index}
+            className={`
+              absolute inset-0 w-full h-full transition-all duration-700 ease-out transform-gpu
+              ${index === currentImageIndex ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 pointer-events-none z-0'}
+            `}
+            style={{ borderRadius: '12px', overflow: 'hidden' }}
+          >
+            <img
+              src={image.src}
+              alt={`Slide ${index + 1}`}
+              loading="lazy"
+              draggable={false}
+              className={`
+                w-full h-full ${image|| 'object-cover'} block transition-transform duration-1000
+                ${index === currentImageIndex ? 'scale-100' : 'scale-110'}
+              `}
+              style={{ borderRadius: '12px' }}
+            />
+            {/* 👇 Overlay y textos eliminados completamente */}
+          </div>
+        ))}
+      </div>
 
-            {/* Navegación para móvil - Mejorada con sombras */}
+      {/* Dots */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 transform z-20">
+        <div className="flex space-x-2 bg-black/20 backdrop-blur-sm rounded-full px-3 py-2 shadow-sm">
+          {images.map((_, i) => (
             <button
-                onClick={prevSlide}
-                className="md:hidden absolute bottom-4 left-4 text-white/90 hover:text-white transition-all duration-300 z-20 p-3 bg-black/50 rounded-full hover:bg-black/70 backdrop-blur-sm shadow-lg"
-                aria-label="Anterior"
-                style={{
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                }}
-            >
-                <FaChevronLeft size={22} />
-            </button>
-            <button
-                onClick={nextSlide}
-                className="md:hidden absolute bottom-4 right-4 text-white/90 hover:text-white transition-all duration-300 z-20 p-3 bg-black/50 rounded-full hover:bg-black/70 backdrop-blur-sm shadow-lg"
-                aria-label="Siguiente"
-                style={{
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                }}
-            >
-                <FaChevronRight size={22} />
-            </button>
-
-            {/* Controles de Navegación - Mejorados con sombras */}
-            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center space-x-3 z-20">
-                {/* Flecha izquierda (solo en PC) */}
-                <button
-                    onClick={prevSlide}
-                    className="hidden md:flex bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 backdrop-blur-sm shadow-lg"
-                    aria-label="Anterior"
-                    style={{
-                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                    }}
-                >
-                    <FaChevronLeft size={18} />
-                </button>
-
-                {/* Puntos de navegación con sombras */}
-                <div className="flex space-x-2 bg-black/30 backdrop-blur-sm rounded-full px-3 py-2 shadow-lg">
-                    {images.map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => handleDotClick(i)}
-                            className={`w-3 h-3 rounded-full transition-all duration-300 shadow-md ${
-                                currentImageIndex === i 
-                                    ? 'bg-white scale-125 shadow-white/50' 
-                                    : 'bg-white/60 hover:bg-white/80 shadow-black/30'
-                            }`}
-                            aria-label={`Ir al slide ${i+1}`}
-                        />
-                    ))}
-                </div>
-
-                {/* Flecha derecha (solo en PC) */}
-                <button
-                    onClick={nextSlide}
-                    className="hidden md:flex bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 backdrop-blur-sm shadow-lg"
-                    aria-label="Siguiente"
-                    style={{
-                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                    }}
-                >
-                    <FaChevronRight size={18} />
-                </button>
-            </div>
+              key={i}
+              onClick={() => handleDotClick(i)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                currentImageIndex === i ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/70'
+              }`}
+              aria-label={`Ir al slide ${i + 1}`}
+            />
+          ))}
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default ImageCarousel;

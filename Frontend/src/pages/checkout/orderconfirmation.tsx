@@ -30,16 +30,16 @@ const OrderConfirmationPage: React.FC = () => {
 
   // Información de pago
   const paymentInfo = {
-    name: "Maria Rodriguez",
-    alias: "maria.rodriguez.mp",
-    cvu: "0000003100000000000000"
+    name: "Paola Patricia Ferrari",
+    alias: "paolapatricia1975",
+    cvu: "4530000800018599797939"
   };
 
   // Información de contacto de la dueña
   const ownerInfo = {
-    name: "Maria Rodriguez",
-    phone: "+5491123456789",
-    businessName: "Mary Boutique"
+    name: "Paola Ferrari",
+    phone: "+54 3624088244",
+    businessName: "Modelado Pao"
   };
 
   // Función para copiar texto al portapapeles
@@ -54,7 +54,7 @@ const OrderConfirmationPage: React.FC = () => {
     if (!state || !state.order) return;
     
     const { order } = state;
-    const message = `¡Hola ${ownerInfo.name}! 👋\n\n` +
+    const message = `¡Hola ${ownerInfo.name}! \n\n` +
       `Acabo de realizar un pedido en ${ownerInfo.businessName} y quiero confirmarlo.\n\n` +
       `*DETALLES DEL PEDIDO:*\n` +
       `• Número de pedido: #${order.id.slice(-8)}\n` +
@@ -71,7 +71,7 @@ const OrderConfirmationPage: React.FC = () => {
       `• ${order.paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia bancaria'}\n\n` +
       `${order.notes && order.notes.trim() !== '' ? `*NOTAS ADICIONALES:*\n${order.notes}\n\n` : ''}` +
       `Por favor, confirmame la recepción de este pedido y los próximos pasos.\n\n` +
-      `¡Gracias! 😊`;
+      `¡Gracias! `;
     
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/${ownerInfo.phone.replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
@@ -121,7 +121,7 @@ const OrderConfirmationPage: React.FC = () => {
               </div>
             </div>
             <h1 className="text-2xl font-bold mb-1">¡Pedido Confirmado!</h1>
-            <p className="text-pink-100 text-sm">Tu pedido ha sido procesado correctamente.</p>
+            <p className="text-pink-100 text-sm">Tu pedido quedo registrado, desliza hacia abajo y contactame por whatsapp para seguir gestionandolo, respondo en horario laboral. Gracias</p>
           </div>
 
           <div className="p-5">

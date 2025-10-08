@@ -1,88 +1,89 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import ImageCarousel from './imagenCarousel';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+
+// Carga diferida del carrusel: no se baja el JS hasta montar
+const LazyImageCarousel = lazy(() => import('./imagenCarousel'));
+
+const WRAPPER_BASE_CLASSES = 'w-full';
+const STICKY_BASE_CLASSES =
+  'sticky top-0 w-full overflow-hidden transition-all duration-700 ease-out z-20 md:rounded-3xl border-4 md:border-[6px] border-white';
+
+// 🔧 Ajustá alto/ancho acá
+const HEIGHT_CLASSES = 'h-[550px] md:h-[530px]';
+const WIDTH_CLASSES  = 'w-[92%] mx-auto md:max-w-[900px]';
 
 const ScrollAnimatedCarousel: React.FC = () => {
-    const [isVisible, setIsVisible] = useState(false);
-    const [hasTriggered, setHasTriggered] = useState(false);
-    const componentRef = useRef<HTMLDivElement>(null);
-    
-    // 💡 CAMBIO 1: Reducir la altura del carrusel para escritorio (de 600px a 450px)
-    // Usamos media query para solo aplicar este cambio en PC (md: min-width: 768px)
-    const CAROUSEL_HEIGHT_PC_PX = 450;
-    // Mantenemos una constante para móvil si la necesitáramos en el futuro, pero aquí
-    // la altura real se define por CSS o la altura de contenido del Home en móvil
-    const CAROUSEL_HEIGHT_MOVIL_PX = 600; // Mantenemos 600 solo como referencia si hiciera falta.
+  const [hasUserScrolled, setHasUserScrolled] = useState(false); // <- requisito duro
+  const [isVisible, setIsVisible] = useState(false);             // para animar/pausar
+  const [isMounted, setIsMounted] = useState(false);             // para montar el carrusel
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
-    const handleScroll = useCallback(() => {
-        if (hasTriggered) return;
+  // 1) Marcamos que el usuario scrolleó (mínimo 1px) y removemos el listener
+  useEffect(() => {
+    const onScroll = () => {
+      if (window.scrollY > 0) {
+        setHasUserScrolled(true);
+        window.removeEventListener('scroll', onScroll);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
 
-        if (!componentRef.current) return;
+    // Si querés exigir un desplazamiento mayor, cambiá el umbral:
+    // if (window.scrollY > 50) { ... }
 
-        const rect = componentRef.current.getBoundingClientRect();
-        
-        // 💡 CAMBIO 2: Ajustar el punto de activación para PC
-        // Si la pantalla es grande (md), activamos antes (más abajo en el scroll).
-        // Si no (móvil), mantenemos el valor por defecto.
-        const isDesktop = window.innerWidth >= 768;
-        // El nuevo valor 200 significa que el carrusel se activa cuando su borde superior
-        // llega a 200px desde la parte superior de la ventana (ya has scrolleado un poco).
-        const activationPoint = isDesktop ? 200 : 100;
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-        // Activar cuando el componente esté en el viewport
-        if (rect.top <= activationPoint && rect.bottom >= 0) {
-            setIsVisible(true);
-            setHasTriggered(true);
-        }
-    }, [hasTriggered]);
+  // 2) Observamos el contenedor para animar cuando entra en viewport
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
 
-    useEffect(() => {
-        // Verificar visibilidad inicial
-        handleScroll();
-        
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, [handleScroll]);
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+    const topMargin = isDesktop ? '-200px' : '-100px';
 
-    // El useEffect para resetear se puede eliminar o mantener para desarrollo
-    useEffect(() => {
-        // No es necesario resetear, lo mantenemos por si ayuda en ciertos entornos
-        // setIsVisible(false);
-        // setHasTriggered(false);
-    }, []);
-
-    return (
-        <div 
-            ref={componentRef} 
-            className="w-full"
-            style={{ 
-                // Aplicar altura para el espacio en PC
-                height: window.innerWidth >= 768 ? `${CAROUSEL_HEIGHT_PC_PX}px` : 'auto', 
-                minHeight: '1px'
-            }}
-        >
-            <div 
-                className={`sticky top-0 w-full overflow-hidden transition-all duration-1000 ease-out z-20 md:rounded-3xl border-4 md:border-6 border-white ${
-                    isVisible 
-                        ? 'opacity-100 translate-y-0' 
-                        : 'opacity-0 translate-y-10'
-                }`}
-                style={{ 
-                    // Aplicar altura al carrusel visible en PC
-                    height: window.innerWidth >= 768 ? `${CAROUSEL_HEIGHT_PC_PX}px` : `${CAROUSEL_HEIGHT_MOVIL_PX}px`,
-                    // Sombra exterior elegante y profesional
-                    boxShadow: isVisible 
-                        ? '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1)' 
-                        : 'none'
-                }}
-            >
-                {/* Nota: Hemos movido las clases de redondeo y borde al div sticky */}
-                <ImageCarousel />
-            </div>
-        </div>
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { root: null, rootMargin: `${topMargin} 0px 0px 0px`, threshold: 0 }
     );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // 3) Montamos el carrusel SOLO cuando: el usuario scrolleó
+  //    (si además querés exigir visibilidad, agregá && isVisible)
+  useEffect(() => {
+    if (hasUserScrolled) {
+      setIsMounted(true);
+    }
+  }, [hasUserScrolled]);
+
+  return (
+    <div
+      ref={wrapperRef}
+      className={`${WRAPPER_BASE_CLASSES} ${WIDTH_CLASSES} ${HEIGHT_CLASSES}`}
+    >
+      <div
+        className={`${STICKY_BASE_CLASSES} ${WIDTH_CLASSES} ${HEIGHT_CLASSES} ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+        }`}
+        style={{
+          boxShadow: isVisible
+            ? '0 8px 24px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.05)'
+            : 'none',
+        }}
+      >
+        {/* ⛔ Nada se carga/renderiza hasta que el usuario scrollee */}
+        {isMounted ? (
+          <Suspense fallback={null}>
+            <LazyImageCarousel pausedExternal={!isVisible} />
+          </Suspense>
+        ) : null}
+      </div>
+    </div>
+  );
 };
 
 export default ScrollAnimatedCarousel;
