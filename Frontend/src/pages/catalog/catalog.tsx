@@ -1,9 +1,15 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getProducts } from '../../services/products.service';
 import type { Product } from '../../services/products.service';
 import { getCategories, type Category } from '../../services/category.service';
 import ProductList from '../../components/productos/productlist';
 import CategoryGrid from '../../components/productos/categoryGrid';
+
+// --- Helpers ---
+// Alternativa compatible si tu toolchain no soporta \p{Diacritic}:
+const stripAccents = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const norm = (s?: string) => stripAccents((s ?? '').trim().toLowerCase());
 
 const CatalogPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -11,57 +17,14 @@ const CatalogPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // --- ESTADOS DE FILTROS Y VISTA ---
+  // Filtros
   const [searchTerm, setSearchTerm] = useState('');
-  // 'Todas las categorías' indica la vista de cuadrícula.
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas las categorías');
   const [sortOrder, setSortOrder] = useState<string>('default');
   const [showFilters, setShowFilters] = useState(false);
-  // --- FIN ESTADOS ---
 
-  // 1. Lista de nombres de categorías para los Select/Dropdowns
-  const categoryNames = useMemo(() => {
-    const names = categories.map(c => c.nombre);
-    return ['Todas las categorías', ...names];
-  }, [categories]);
-
-  // 2. Categorías Únicas con su primera imagen (Para CategoryGrid)
-  const categoriesWithImages = useMemo(() => {
-    const categoryImageMap = new Map<string, string>();
-
-    products.forEach(p => {
-      if (p.data.categoria && !categoryImageMap.has(p.data.categoria)) {
-        categoryImageMap.set(p.data.categoria, p.data.imagenURL);
-      }
-    });
-
-    return categories
-      .map(cat => ({
-        name: cat.nombre,
-        imageUrl: categoryImageMap.get(cat.nombre) || '/images/default-placeholder.png',
-      }))
-      .filter(cat => categoryImageMap.has(cat.name));
-  }, [products, categories]);
-
-  // Aplicar filtros
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(p => p.data.nombre.toLowerCase().includes(term));
-    }
-
-    if (selectedCategory !== 'Todas las categorías') {
-      result = result.filter(p => p.data.categoria === selectedCategory);
-    }
-
-    if (sortOrder === 'price-high') result.sort((a, b) => b.data.precio - a.data.precio);
-    else if (sortOrder === 'price-low') result.sort((a, b) => a.data.precio - b.data.precio);
-    else if (sortOrder === 'name') result.sort((a, b) => a.data.nombre.localeCompare(b.data.nombre));
-
-    return result;
-  }, [products, searchTerm, selectedCategory, sortOrder]);
+  // Query params
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Carga inicial
   useEffect(() => {
@@ -83,20 +46,109 @@ const CatalogPage: React.FC = () => {
     fetchData();
   }, []);
 
-  // Limpiar filtros
+  // Nombres de categorías para los selects (con opción temporal si la seleccionada no está)
+  const categoryNames = useMemo(() => {
+    const names = categories.map(c => c.nombre);
+    const base = ['Todas las categorías', ...names];
+
+    if (
+      selectedCategory &&
+      selectedCategory !== 'Todas las categorías' &&
+      !base.some(n => norm(n) === norm(selectedCategory))
+    ) {
+      base.push(selectedCategory); // opción temporal para que el select no "pierda" valor
+    }
+
+    return base;
+  }, [categories, selectedCategory]);
+
+  // Mapa de imágenes por categoría (normalizado)
+  const categoriesWithImages = useMemo(() => {
+    const categoryImageMap = new Map<string, string>();
+
+    products.forEach(p => {
+      if (p.data.categoria) {
+        const key = norm(p.data.categoria);
+        if (!categoryImageMap.has(key)) {
+          categoryImageMap.set(key, p.data.imagenURL);
+        }
+      }
+    });
+
+    return categories
+      .map(cat => ({
+        name: cat.nombre,
+        imageUrl: categoryImageMap.get(norm(cat.nombre)) || '/images/default-placeholder.png',
+      }))
+      .filter(cat => categoryImageMap.has(norm(cat.name)));
+  }, [products, categories]);
+
+  // Filtros aplicados en memoria (case/acentos-insensible)
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
+
+    if (searchTerm) {
+      const term = norm(searchTerm);
+      result = result.filter(p => norm(p.data.nombre).includes(term));
+    }
+
+    if (selectedCategory !== 'Todas las categorías') {
+      const catN = norm(selectedCategory);
+      result = result.filter(p => norm(p.data.categoria) === catN);
+    }
+
+    if (sortOrder === 'price-high') result.sort((a, b) => b.data.precio - a.data.precio);
+    else if (sortOrder === 'price-low') result.sort((a, b) => a.data.precio - b.data.precio);
+    else if (sortOrder === 'name') result.sort((a, b) => a.data.nombre.localeCompare(b.data.nombre));
+
+    return result;
+  }, [products, searchTerm, selectedCategory, sortOrder]);
+
+  // Lee ?category= cuando ya tenemos categorías (con fallback)
+  useEffect(() => {
+    if (loading) return;
+
+    const catFromUrl = searchParams.get('category');
+    if (!catFromUrl) return;
+
+    const match = categories.find(c => norm(c.nombre) === norm(catFromUrl));
+    if (match) {
+      setSelectedCategory(match.nombre); // nombre canónico
+    } else {
+      // Fallback: usar lo que vino en la URL para que el filtro funcione igual
+      setSelectedCategory(catFromUrl);
+    }
+  }, [loading, categories, searchParams, setSearchParams]);
+
+  // Sincroniza la URL cuando cambia la categoría en UI
+  useEffect(() => {
+    if (loading) return;
+    const next = new URLSearchParams(searchParams);
+    if (selectedCategory && selectedCategory !== 'Todas las categorías') {
+      next.set('category', selectedCategory);
+    } else {
+      next.delete('category');
+    }
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory]);
+
+  // Helpers
   const resetFilters = () => {
     setSearchTerm('');
     setSelectedCategory('Todas las categorías');
     setSortOrder('default');
   };
 
-  // Volver a categorías
   const goBackToCategories = () => {
     setSelectedCategory('Todas las categorías');
     setSearchTerm('');
     setSortOrder('default');
   };
 
+  const isCategoryView = selectedCategory === 'Todas las categorías' && !searchTerm;
+
+  // UI estados
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[rgb(240,236,238)]">
@@ -121,11 +173,10 @@ const CatalogPage: React.FC = () => {
     );
   }
 
-  const isCategoryView = selectedCategory === 'Todas las categorías' && !searchTerm;
-
+  // Render
   return (
     <div className="min-h-screen flex flex-col bg-[rgb(240,236,238)]">
-      {/* HEADER DEL CATÁLOGO */}
+      {/* HEADER */}
       <header className="bg-teal-500 text-white">
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-cursive font-bold text-center mb-2">Nuestras Creaciones</h1>
@@ -167,19 +218,6 @@ const CatalogPage: React.FC = () => {
               />
             </div>
 
-            {/* Toggle móvil filtros */}
-            <div className="md:hidden w-full">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
-                </svg>
-                {showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
-              </button>
-            </div>
-
             {/* Filtros desktop */}
             <div className="hidden md:flex items-center gap-4">
               <select
@@ -204,16 +242,26 @@ const CatalogPage: React.FC = () => {
               </select>
 
               {(searchTerm || selectedCategory !== 'Todas las categorías' || sortOrder !== 'default') && (
-                <button
-                  onClick={resetFilters}
-                  className="flex items-center gap-1 text-teal-600 hover:text-teal-800"
-                >
+                <button onClick={resetFilters} className="flex items-center gap-1 text-teal-600 hover:text-teal-800">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   Limpiar filtros
                 </button>
               )}
+            </div>
+
+            {/* Toggle móvil */}
+            <div className="md:hidden w-full">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
+                </svg>
+                {showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
+              </button>
             </div>
           </div>
 
@@ -249,17 +297,11 @@ const CatalogPage: React.FC = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowFilters(false)}
-                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                  >
+                  <button onClick={() => setShowFilters(false)} className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
                     Cerrar
                   </button>
                   {(searchTerm || selectedCategory !== 'Todas las categorías' || sortOrder !== 'default') && (
-                    <button
-                      onClick={resetFilters}
-                      className="flex-1 px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600"
-                    >
+                    <button onClick={resetFilters} className="flex-1 px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600">
                       Limpiar
                     </button>
                   )}
@@ -276,11 +318,23 @@ const CatalogPage: React.FC = () => {
           <CategoryGrid categories={categoriesWithImages} onSelectCategory={setSelectedCategory} />
         ) : (
           <div className="container mx-auto px-4 py-6">
+            {/* 🔽 Título de la categoría (centrado y cursive) */}
+            {selectedCategory !== 'Todas las categorías' && (
+              <div className="text-center mb-8">
+                <h1 className="font-cursive font-bold text-3xl md:text-5xl text-gray-800">
+                  {selectedCategory}
+                </h1>
+              </div>
+            )}
+
+            {/* Estado de filtros / conteo */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
               <p className="text-gray-600">
-                {selectedCategory !== 'Todas las categorías'
-                  ? <span className="text-xl font-bold text-teal-600">Colección: {selectedCategory}</span>
-                  : 'Mostrando'}
+                {selectedCategory !== 'Todas las categorías' ? (
+                  <span className="text-xl font-bold text-teal-600">Colección: {selectedCategory}</span>
+                ) : (
+                  'Mostrando'
+                )}
                 <span className="font-semibold text-teal-600 ml-2">{filteredProducts.length}</span> de {products.length} productos
               </p>
               <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
@@ -302,12 +356,9 @@ const CatalogPage: React.FC = () => {
                 <div className="text-gray-400 text-5xl mb-4">🎨</div>
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">No encontramos productos</h3>
                 <p className="text-gray-600 max-w-md mx-auto mb-6">
-                  No hay productos que coincidan con tu búsqueda. Intenta ajustar los filtros o términos de búsqueda.
+                  No hay productos que coincidan con esta categoria. Proximamente habran productos.
                 </p>
-                <button
-                  onClick={goBackToCategories}
-                  className="px-6 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors"
-                >
+                <button onClick={goBackToCategories} className="px-6 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors">
                   Ver todas las categorías
                 </button>
               </div>
@@ -317,15 +368,6 @@ const CatalogPage: React.FC = () => {
           </div>
         )}
       </main>
-
-      {/* 🔤 IMPORTACIÓN DE FUENTES Y CLASES (GLOBAL PARA ESTE ARCHIVO) */}
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Quicksand:wght@300;400;500&display=swap');
-          .font-cursive { font-family: 'Playfair Display', serif; }
-          .font-sans    { font-family: 'Quicksand', sans-serif; }
-        `}
-      </style>
     </div>
   );
 };
