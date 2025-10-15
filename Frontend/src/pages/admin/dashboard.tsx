@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   FaClipboardList, FaCashRegister, FaBoxOpen, FaSignOutAlt, 
-  FaThLarge, FaPlusCircle, FaChartLine, FaBox, FaBars, FaTimes 
+  FaThLarge, /* FaPlusCircle, FaChartLine, FaBox, */ FaBars, FaTimes 
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../components/admin/authStore';
@@ -13,7 +13,7 @@ import VentasManagement from './../managements/ventasmanagement';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, logout } = useAuthStore();
+  const { /* user, isAdmin, */ logout } = useAuthStore();
   const [activeSection, setActiveSection] = useState<string>('welcome');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { FaFacebook, FaInstagram, FaWhatsapp, FaEnvelope } from 'react-icons/fa';
+// import React from 'react';
+import {FaInstagram, FaWhatsapp, FaEnvelope } from 'react-icons/fa';
 import '../../App.css'; // Asegúrate de importar tu archivo CSS
 
 const CustomFooter = () => {

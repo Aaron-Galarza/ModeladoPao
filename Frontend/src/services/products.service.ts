@@ -1,5 +1,5 @@
 import { db } from "../firebase/firebase.config";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, /* query, where */ } from "firebase/firestore";
 
 export interface Product {
     id: string;

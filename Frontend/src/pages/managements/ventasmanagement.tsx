@@ -5,7 +5,7 @@ import {
   orderBy, 
   onSnapshot, 
   Timestamp,
-  where 
+  /* where */ 
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase.config";
 import { 
@@ -16,8 +16,8 @@ import {
   FaChartLine,
   FaShoppingCart,
   FaHome,
-  FaStore,
-  FaPercent
+  /* FaStore,
+  FaPercent */
 } from "react-icons/fa";
 import { CSVLink } from "react-csv";
 

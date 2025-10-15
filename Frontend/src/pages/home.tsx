@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { /* Link, */ useNavigate } from 'react-router-dom';
 import ScrollAnimatedCarousel from '../components/design/ScrollAnimatedCarousel';
 import {
-  FaHeart, FaPalette, FaHandHoldingHeart, FaBrush, FaAward,
+  FaHeart, /* FaPalette, */ FaHandHoldingHeart, FaBrush, FaAward,
   FaInstagram, FaWhatsapp, FaEnvelope, FaPaw, FaUserAlt, FaLeaf
 } from 'react-icons/fa';
 import ContactForm from '../components/design/ContactForm';
