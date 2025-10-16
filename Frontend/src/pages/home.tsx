@@ -153,7 +153,8 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Contacto + Redes */}
-      <section className="w-full bg-gradient-to-br from-gray-50 to-[rgb(240,236,238)] py-16">
+      
+      <section id="formulario-contacto" className="w-full bg-gradient-to-br from-gray-50 to-[rgb(240,236,238)] py-16">
         <div className="w-full mx-auto text-center px-4 md:px-8">
           <ContactForm
             title="¡Hablemos de tu idea!"
