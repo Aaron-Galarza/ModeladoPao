@@ -1,78 +1,97 @@
-// Backend/functions/src/controllers/ordersController.ts
-
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+// 🚨 CORRECCIÓN: Usar require para que TypeScript trate 'cors' como una función callable
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const cors = require('cors'); 
+
+// Inicializa el middleware de CORS para permitir peticiones desde cualquier origen (true)
+const corsHandler = cors({ origin: true });
 
 export const crearPedido = functions.https.onRequest(async (req, res) => {
-    // Validar el método de la solicitud
-    if (req.method !== "POST") {
-        res.status(405).send("Método no permitido. Usa POST.");
-        return;
-    }
-
-    const { products, guestEmail, guestPhone, guestName, deliveryType, shippingAddress, paymentMethod, notes } = req.body;
-
-    // Validar campos obligatorios
-    if (!products || products.length === 0 || !guestEmail || !guestPhone || !guestName || !deliveryType || !paymentMethod) {
-        res.status(400).send("Error: Faltan campos obligatorios.");
-        return;
-    }
-
-    // Lógica para el cálculo del total
-    const db = admin.firestore();
-    let totalAmount = 0;
-    const productsForOrder = [];
-
-    for (const item of products) {
-        // Validación básica de cada producto en el array
-        if (!item.idProducto || typeof item.idProducto !== 'string' || !item.quantity || typeof item.quantity !== 'number') {
-            res.status(400).send("Error: Cada producto debe tener 'idProducto' (string) y 'quantity' (number).");
+    // 1. Envolver toda la lógica de la función con el handler de CORS
+    corsHandler(req, res, async () => {
+        
+        // 2. Validar el método de la solicitud
+        // El handler de CORS ya se encarga de las peticiones OPTIONS (preflight), 
+        // por lo que solo necesitamos chequear el POST.
+        if (req.method !== "POST") {
+            res.status(405).send("Método no permitido. Usa POST.");
             return;
         }
 
-        const productoRef = db.collection("Productos").doc(item.idProducto);
-        const productoDoc = await productoRef.get();
+        const { products, guestEmail, guestPhone, guestName, deliveryType, shippingAddress, paymentMethod, notes } = req.body;
 
-        if (!productoDoc.exists) {
-            res.status(404).send(`Error: Producto con ID ${item.idProducto} no encontrado.`);
+        // 3. Validar campos obligatorios
+        if (!products || products.length === 0 || !guestEmail || !guestPhone || !guestName || !deliveryType || !paymentMethod) {
+            res.status(400).send("Error: Faltan campos obligatorios.");
             return;
         }
 
-        const datosProducto = productoDoc.data();
-        let itemPrice = datosProducto?.precio || 0;
+        // 4. Lógica para el cálculo del total
+        const db = admin.firestore();
+        let totalAmount = 0;
+        const productsForOrder = [];
 
-        totalAmount += itemPrice * item.quantity;
+        try {
+            for (const item of products) {
+                // Validación básica de cada producto en el array
+                if (!item.idProducto || typeof item.idProducto !== 'string' || !item.quantity || typeof item.quantity !== 'number') {
+                    res.status(400).send("Error: Cada producto debe tener 'idProducto' (string) y 'quantity' (number).");
+                    return;
+                }
 
-        productsForOrder.push({
-            idProducto: item.idProducto,
-            nombre: datosProducto?.nombre,
-            cantidad: item.quantity,
-            precioEnElPedido: itemPrice,
-        });
-    }
+                const productoRef = db.collection("Productos").doc(item.idProducto);
+                const productoDoc = await productoRef.get();
 
-    // Creación del documento del pedido en Firestore
-    try {
-        const orderData = {
-            guestEmail,
-            guestPhone,
-            guestName,
-            products: productsForOrder,
-            totalAmount,
-            deliveryType,
-            shippingAddress: deliveryType === 'delivery' ? shippingAddress : null,
-            paymentMethod,
-            notes: notes || '',
-            status: 'pending',
-            createdAt: new Date(),
-        };
+                if (!productoDoc.exists) {
+                    res.status(404).send(`Error: Producto con ID ${item.idProducto} no encontrado.`);
+                    return;
+                }
 
-        const docRef = await db.collection("Pedidos").add(orderData);
-        res.status(201).send({ message: "Pedido creado exitosamente.", id: docRef.id });
-    } catch (error) {
-        console.error("Error al crear el pedido:", error);
-        res.status(500).send("Error interno al procesar el pedido.");
-    }
+                const datosProducto = productoDoc.data();
+                // Usar el operador de coalescencia nula (??) para un manejo seguro de precio
+                let itemPrice = datosProducto?.precio ?? 0;
+
+                totalAmount += itemPrice * item.quantity;
+
+                productsForOrder.push({
+                    idProducto: item.idProducto,
+                    nombre: datosProducto?.nombre,
+                    cantidad: item.quantity,
+                    precioEnElPedido: itemPrice,
+                });
+            }
+
+            // 5. Creación del documento del pedido en Firestore
+            const orderData = {
+                guestEmail,
+                guestPhone,
+                guestName,
+                products: productsForOrder,
+                totalAmount,
+                deliveryType,
+                // Si es pickup, la dirección es null; si es delivery, usa la dirección proporcionada
+                shippingAddress: deliveryType === 'delivery' ? shippingAddress : null, 
+                paymentMethod,
+                notes: notes || '',
+                status: 'pending',
+                // Usar serverTimestamp para hora precisa y consistente
+                createdAt: admin.firestore.FieldValue.serverTimestamp(), 
+            };
+
+            const docRef = await db.collection("Pedidos").add(orderData);
+            
+            // 6. Respuesta exitosa (201 Created)
+            res.status(201).send({ message: "Pedido creado exitosamente.", id: docRef.id });
+            
+        } catch (error) {
+            console.error("Error al procesar el pedido o calcular total:", error);
+            // Si el error no ha sido manejado antes (e.g. 404 de producto), enviamos 500
+            if (!res.headersSent) {
+                res.status(500).send("Error interno al procesar el pedido.");
+            }
+        }
+    });
 });
 
 // Define la interfaz para los datos de la solicitud
@@ -81,19 +100,22 @@ interface IUpdateOrderStatusData {
     newStatus: string;
 }
 
-// Función para actualizar el estado de un pedido
+// Función para actualizar el estado de un pedido (sin cambios necesarios)
 export const updateOrderStatus = functions.https.onCall(async (request: functions.https.CallableRequest<IUpdateOrderStatusData>) => {
+    // Las funciones onCall no necesitan CORS porque usan el SDK de Firebase
+    // y manejan la comunicación de forma diferente (a través de HTTP/2 y SDK).
     try {
         const db = admin.firestore();
 
-// 1. Verificación de autenticación y admin
-if (!request.auth || !request.auth.token.admin) {
-    throw new functions.https.HttpsError('permission-denied', 'Solo los administradores pueden actualizar el estado de los pedidos.');
-}
+        // 1. Verificación de autenticación y admin
+        if (!request.auth || !request.auth.token.admin) {
+            throw new functions.https.HttpsError('permission-denied', 'Solo los administradores pueden actualizar el estado de los pedidos.');
+        }
 
         // 2. Validación de datos
         const { orderId, newStatus } = request.data;
-        const validStatus = ['pending', 'in-progress', 'delivered', 'cancelled'];
+        // Asumo que tu frontend tiene 'pending'|'confirmed'|'preparing'|'ready'|'delivered'|'cancelled'
+        const validStatus = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'];
         
         if (!orderId || typeof orderId !== 'string' || !newStatus || !validStatus.includes(newStatus)) {
             throw new functions.https.HttpsError('invalid-argument', 'Se requiere un ID de pedido y un estado válido.');
