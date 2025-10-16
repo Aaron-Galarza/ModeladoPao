@@ -12,6 +12,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/firebase.config'
 
+const FUNCTIONS_BASE_URL = import.meta.env.VITE_FIREBASE_FUNCTIONS_URL;
+
 // Interfaces
 export interface OrderProduct {
   idProducto: string;
@@ -36,8 +38,8 @@ export interface OrderDetails {
   updatedAt?: Timestamp | Date;
 }
 
-// Proxy endpoints (solo para creación)
-const crearPedidoURL = '/api/crearPedido';
+const FUNCTION_NAME = 'crearPedido';
+const crearPedidoURL = `${FUNCTIONS_BASE_URL}${FUNCTION_NAME}`;
 
 // Función para crear pedido (usando proxy como antes)
 export interface OrderData {
