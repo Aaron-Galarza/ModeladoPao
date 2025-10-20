@@ -15,7 +15,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
     <div className="container mx-auto px-4 py-8">
       {/* Header con el mismo estilo del catálogo */}
       <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold font-cursive  text-gray-800 mb-4">Explora Nuestras Colecciones</h2>
+        <h2 className="text-3xl font-bold font-cursive  text-gray-800 mb-4">Temáticas</h2>
         
       </div>
 

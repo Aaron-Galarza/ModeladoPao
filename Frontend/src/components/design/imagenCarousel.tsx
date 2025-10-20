@@ -113,8 +113,8 @@ const ImageCarousel: React.FC<Props> = ({ pausedExternal = false }) => {
     <div
       className={`
         relative w-full mx-auto
-        h-[550px] md:h-[530px]
-        md:max-w-[900px]
+        h-[500px] md:h-[530px]
+        md:max-w-[650px]
         overflow-hidden bg-black transition-all duration-1000
         ${carouselLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
       `}

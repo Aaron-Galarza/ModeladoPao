@@ -179,9 +179,9 @@ const CatalogPage: React.FC = () => {
       {/* HEADER */}
       <header className="bg-teal-500 text-white">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-cursive font-bold text-center mb-2">Nuestras Creaciones</h1>
+          <h1 className="text-3xl font-cursive font-bold text-center mb-2">Mis Creaciones</h1>
           <p className="text-center text-white text-opacity-90 max-w-2xl mx-auto">
-            Descubre nuestra colección de porcelana fría hecha con amor y dedicación.
+            Descubri las colecciones de porcelana fría hecha con amor y dedicación.
           </p>
         </div>
       </header>

@@ -72,8 +72,8 @@ const HomePage: React.FC = () => {
           </h1>
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-200 max-w-3xl md:max-w-4xl mx-auto mt-6">
             <p className="text-lg md:text-xl text-gray-600 font-sans text-center leading-relaxed italic">
-              "Soy Paola Ferrari y me dedico a crear piezas en porcelana fría.
-              Cada pieza está hecha a mano, con diseño, detalle y mucho amor."
+              "Soy Paola Ferrari y modelo piezas en porcelana fría.
+              Cada trabajo está hecho a mano, con detalle y mucho amor."
             </p>
           </div>
         </div>
@@ -136,7 +136,7 @@ const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: <FaAward className="text-3xl" />, title: 'Calidad Premium', description: 'Materiales de primera calidad que garantizan durabilidad y belleza y que tu pieza dure en el tiempo.' },
+              { icon: <FaAward className="text-3xl" />, title: 'Calidad Premium', description: 'Uso materiales de primera calidad como por ejemplo tintas al óleo que garantizan colores únicos  y delicados. La porcelana es liviana y flexible (se cae y no se rompe).' },
               { icon: <FaHandHoldingHeart className="text-3xl" />, title: 'Hecho con Amor', description: 'Cada pieza es creada artesanalmente con atención a los detalles, poniendo el corazón en el proceso.' },
               { icon: <FaBrush className="text-3xl" />, title: 'Diseño Personalizado', description: 'Creamos figuras únicas según tus preferencias y necesidades para ese evento especial.' }
             ].map((b, i) => (

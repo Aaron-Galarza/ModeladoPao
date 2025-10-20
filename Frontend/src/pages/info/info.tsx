@@ -7,7 +7,7 @@ const content = {
     eyebrow: "Quien soy",
     title: "Calidad, detalle y amor en cada trabajo",
     subtitle:
-      "Soy Paola Ferrari y desde 2017 que me dedico a crear piezas únicas en porcelana fría para cualquier tipo de eventos. Además de lo publicado en la página, realizo pedidos totalmente personalizados y siempre hechos con mucha dedicación y amor.",
+      "Soy Paola Ferrari y desde 2017 que me dedico a crear piezas únicas en porcelana fría para cualquier tipo de eventos. Además de lo publicado en la página, realizo pedidos totalmente personalizados.",
     ctaLabel: "Ver catálogo",
     ctaHref: "/catalogo",
     secondaryCtaLabel: "Contactame",
@@ -25,7 +25,7 @@ const content = {
       ),
     },
     {
-      title: "Precios no excesivos",
+      title: "Precios justos",
       desc: "Precios justos basados en la calidad del producto y horas de trabajo.",
       icon: (
         <svg viewBox="0 0 24 24" className="w-6 h-6" stroke="currentColor" fill="none" strokeWidth="1.8">
@@ -52,7 +52,7 @@ const content = {
   stats: [
     { label: "Años trabajando en el rubro", value: "8+" },
     { label: "Trabajos realizados en todo tipo de eventos", value: "Muchos" },
-    { label: "Puntaje promedio", value: "4.8/5" },
+    { label: "Clientes satisfechos", value: "+400" },
     { label: "Productos activos", value: "20+" },
   ],
   faqs: [

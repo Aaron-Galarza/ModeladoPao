@@ -14,6 +14,7 @@ import CheckoutPage from './pages/checkout/checkout';
 import OrderConfirmationPage from './pages/checkout/orderconfirmation';
 import { FaSpinner } from 'react-icons/fa';
 import Info from './pages/info/info'
+import ScrollToTop from './components/ScrolltoTop';
 // Componente de layout para rutas públicas
 const PublicLayout = () => (
   <div className="flex flex-col min-h-screen">
@@ -65,6 +66,7 @@ function App() {
 
   return (
     <Router>
+    <ScrollToTop />
       <div className="App">
         <Routes>
           {/* Rutas con el layout público */}

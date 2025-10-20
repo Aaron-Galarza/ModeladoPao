@@ -8,8 +8,8 @@ const STICKY_BASE_CLASSES =
   'sticky top-0 w-full overflow-hidden transition-all duration-700 ease-out z-20 md:rounded-3xl border-4 md:border-[6px] border-white';
 
 // 🔧 Ajustá alto/ancho acá
-const HEIGHT_CLASSES = 'h-[550px] md:h-[530px]';
-const WIDTH_CLASSES  = 'w-[92%] mx-auto md:max-w-[900px]';
+const HEIGHT_CLASSES = 'h-[500px] md:h-[530px]';
+const WIDTH_CLASSES  = 'w-[92%] mx-auto md:max-w-[650px]';
 
 const ScrollAnimatedCarousel: React.FC = () => {
   const [hasUserScrolled, setHasUserScrolled] = useState(false); // <- requisito duro
