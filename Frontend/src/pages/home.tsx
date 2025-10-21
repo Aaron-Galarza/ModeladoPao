@@ -33,10 +33,10 @@ const HomePage: React.FC = () => {
   };
 
   const featured = [
-    { name: 'Animales', icon: <FaPaw className="text-3xl" />, count: '120+ figuras', bg: 'from-white to-pink-50', hover: 'text-pink-600' },
-    { name: 'Personajes', icon: <FaUserAlt className="text-3xl" />, count: '80+ diseños', bg: 'from-white to-purple-50', hover: 'text-purple-600' },
-    { name: 'Flores', icon: <FaLeaf className="text-3xl" />, count: '95+ modelos', bg: 'from-white to-teal-50', hover: 'text-teal-600' },
-    { name: 'Bodas', icon: <FaHeart className="text-3xl" />, count: '150+ opciones', bg: 'from-white to-amber-50', hover: 'text-amber-600' },
+    { name: 'Animales', icon: <FaPaw className="text-3xl" />, count: '+ figuras', bg: 'from-white to-pink-50', hover: 'text-pink-600' },
+    { name: 'Personajes', icon: <FaUserAlt className="text-3xl" />, count: '+ diseños', bg: 'from-white to-purple-50', hover: 'text-purple-600' },
+    { name: 'Flores', icon: <FaLeaf className="text-3xl" />, count: '+ modelos', bg: 'from-white to-teal-50', hover: 'text-teal-600' },
+    { name: 'Bodas', icon: <FaHeart className="text-3xl" />, count: '+ opciones', bg: 'from-white to-amber-50', hover: 'text-amber-600' },
   ];
 
   return (
