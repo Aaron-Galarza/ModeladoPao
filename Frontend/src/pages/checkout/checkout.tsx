@@ -17,7 +17,7 @@ const CheckoutPage: React.FC = () => {
   const navigate = useNavigate(); // 🚨 NUEVOS ESTADOS PARA CUPONES
   const [couponCode, setCouponCode] = useState<string>("");
   const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [isCouponLoading, setIsCouponLoading] = useState(false); // 🚨 FIN NUEVOS ESTADOS
+  const [isCouponLoading] = useState(false); // 🚨 FIN NUEVOS ESTADOS
   const [formData, setFormData] = useState({
     guestName: "",
     guestEmail: "",
