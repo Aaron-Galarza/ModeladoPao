@@ -50,6 +50,7 @@ export interface OrderData {
   deliveryType: string;
   shippingAddress?: string;
   paymentMethod: string;
+  couponCode?: string;
   notes?: string;
 }
 

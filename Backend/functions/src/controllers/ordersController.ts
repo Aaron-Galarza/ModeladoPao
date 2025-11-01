@@ -12,14 +12,22 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         
         // 2. Validar el método de la solicitud
-        // El handler de CORS ya se encarga de las peticiones OPTIONS (preflight), 
-        // por lo que solo necesitamos chequear el POST.
         if (req.method !== "POST") {
             res.status(405).send("Método no permitido. Usa POST.");
             return;
         }
 
-        const { products, guestEmail, guestPhone, guestName, deliveryType, shippingAddress, paymentMethod, notes } = req.body;
+        const { 
+            products, 
+            guestEmail, 
+            guestPhone, 
+            guestName, 
+            deliveryType, 
+            shippingAddress, 
+            paymentMethod, 
+            notes,
+            discountCode // 🚨 NUEVO: Recibimos el código de descuento del frontend
+        } = req.body;
 
         // 3. Validar campos obligatorios
         if (!products || products.length === 0 || !guestEmail || !guestPhone || !guestName || !deliveryType || !paymentMethod) {
@@ -27,9 +35,9 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        // 4. Lógica para el cálculo del total
+        // 4. Lógica para el cálculo del subtotal (antes del descuento)
         const db = admin.firestore();
-        let totalAmount = 0;
+        let subtotalAmount = 0; // Renombramos a subtotalAmount para claridad
         const productsForOrder = [];
 
         try {
@@ -49,10 +57,9 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
                 }
 
                 const datosProducto = productoDoc.data();
-                // Usar el operador de coalescencia nula (??) para un manejo seguro de precio
                 let itemPrice = datosProducto?.precio ?? 0;
 
-                totalAmount += itemPrice * item.quantity;
+                subtotalAmount += itemPrice * item.quantity;
 
                 productsForOrder.push({
                     idProducto: item.idProducto,
@@ -62,27 +69,82 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
                 });
             }
 
+            let finalAmount = subtotalAmount;
+            let discountApplied = 0;
+            let usedDiscountCode = null;
+
+            // ----------------------------------------------------
+            // 🚨 INTEGRACIÓN: LÓGICA DE DESCUENTO NATIVA
+            // ----------------------------------------------------
+            if (discountCode) {
+                const codeToSearch = String(discountCode).toUpperCase();
+                try {
+                    const discountDoc = await db.collection('Descuentos').doc(codeToSearch).get();
+
+                    if (discountDoc.exists) {
+                        const discount = discountDoc.data() as any;
+                        
+                        // 1. Validar que esté activo
+                        if (discount.isActive) {
+                            // 2. Validar expiración (si tiene fecha)
+                            const isExpired = discount.expiresAt && discount.expiresAt.toDate() < new Date();
+                            
+                            if (!isExpired) {
+                                // 3. Aplicar descuento
+                                const { type, value } = discount;
+
+                                if (type === 'percentage') {
+                                    discountApplied = finalAmount * (value / 100);
+                                } else if (type === 'fixed') {
+                                    discountApplied = value;
+                                }
+                                
+                                // Asegurar que el descuento no hace el total negativo
+                                finalAmount = Math.max(0, finalAmount - discountApplied);
+                                usedDiscountCode = codeToSearch;
+                                console.log(`Cupón ${codeToSearch} aplicado. Descuento: ${discountApplied}. Monto final: ${finalAmount}`);
+                            } else {
+                                console.log(`Cupón ${codeToSearch} expirado.`);
+                            }
+                        } else {
+                            console.log(`Cupón ${codeToSearch} inactivo.`);
+                        }
+                    } else {
+                        console.log(`Cupón ${codeToSearch} no encontrado.`);
+                    }
+                } catch (error) {
+                    console.error("Error al buscar cupón en Firestore:", error);
+                    // Si hay un error, el pedido sigue sin descuento
+                }
+            }
+            // ----------------------------------------------------
+
             // 5. Creación del documento del pedido en Firestore
             const orderData = {
                 guestEmail,
                 guestPhone,
                 guestName,
                 products: productsForOrder,
-                totalAmount,
+                subtotalAmount, // 🚨 Monto antes del descuento
+                discountApplied: discountApplied, // Cuánto se descontó
+                usedDiscountCode: usedDiscountCode, // El código usado (o null)
+                totalAmount: finalAmount, // 🚨 MONTO FINAL A PAGAR
                 deliveryType,
-                // Si es pickup, la dirección es null; si es delivery, usa la dirección proporcionada
                 shippingAddress: deliveryType === 'delivery' ? shippingAddress : null, 
                 paymentMethod,
                 notes: notes || '',
                 status: 'pending',
-                // Usar serverTimestamp para hora precisa y consistente
                 createdAt: admin.firestore.FieldValue.serverTimestamp(), 
             };
 
             const docRef = await db.collection("Pedidos").add(orderData);
             
             // 6. Respuesta exitosa (201 Created)
-            res.status(201).send({ message: "Pedido creado exitosamente.", id: docRef.id });
+            res.status(201).send({ 
+                message: "Pedido creado exitosamente.", 
+                id: docRef.id,
+                totalAmount: finalAmount // Devolvemos el monto final
+            });
             
         } catch (error) {
             console.error("Error al procesar el pedido o calcular total:", error);
@@ -94,34 +156,29 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
     });
 });
 
+
 // Define la interfaz para los datos de la solicitud
 interface IUpdateOrderStatusData {
     orderId: string;
     newStatus: string;
 }
 
-// Función para actualizar el estado de un pedido (sin cambios necesarios)
+// Función para actualizar el estado de un pedido (sin cambios)
 export const updateOrderStatus = functions.https.onCall(async (request: functions.https.CallableRequest<IUpdateOrderStatusData>) => {
-    // Las funciones onCall no necesitan CORS porque usan el SDK de Firebase
-    // y manejan la comunicación de forma diferente (a través de HTTP/2 y SDK).
     try {
         const db = admin.firestore();
 
-        // 1. Verificación de autenticación y admin
         if (!request.auth || !request.auth.token.admin) {
             throw new functions.https.HttpsError('permission-denied', 'Solo los administradores pueden actualizar el estado de los pedidos.');
         }
 
-        // 2. Validación de datos
         const { orderId, newStatus } = request.data;
-        // Asumo que tu frontend tiene 'pending'|'confirmed'|'preparing'|'ready'|'delivered'|'cancelled'
         const validStatus = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'];
         
         if (!orderId || typeof orderId !== 'string' || !newStatus || !validStatus.includes(newStatus)) {
             throw new functions.https.HttpsError('invalid-argument', 'Se requiere un ID de pedido y un estado válido.');
         }
 
-        // 3. Lógica principal: Actualizar el pedido
         const orderRef = db.collection('Pedidos').doc(orderId);
         const orderDoc = await orderRef.get();
 
@@ -131,13 +188,10 @@ export const updateOrderStatus = functions.https.onCall(async (request: function
 
         const currentStatus = orderDoc.data()?.status;
 
-        // Validaciones de estado para evitar cambios inválidos
         if (newStatus === currentStatus) {
             return { message: 'El estado del pedido ya es el que intentas establecer.' };
         }
         
-        
-        // Ejecuta la actualización en Firestore
         await orderRef.update({
             status: newStatus
         });

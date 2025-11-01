@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   FaClipboardList, FaCashRegister, FaBoxOpen, FaSignOutAlt, 
-  FaThLarge, /* FaPlusCircle, FaChartLine, FaBox, */ FaBars, FaTimes 
+  FaThLarge, FaBars, FaTimes, FaTags // 🚨 Se agregó FaTags para Cupones
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../components/admin/authStore';
@@ -10,6 +10,8 @@ import { useAuthStore } from '../../components/admin/authStore';
 import ProductsManagement from './../managements/productsmanagement';
 import OrdersManagement from './../managements/ordersmanagement';
 import VentasManagement from './../managements/ventasmanagement';
+// 🚨 Importar el nuevo componente
+import CuponesManagement from './../managements/cuponesmanagement';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -32,9 +34,12 @@ const Dashboard: React.FC = () => {
       case 'orders':
         return <OrdersManagement />;
       case 'sales':
-        return <VentasManagement />; // ¡Aquí está la solución! Ahora se renderiza el componente.
+        return <VentasManagement />;
       case 'products':
         return <ProductsManagement />;
+      // 🚨 NUEVO CASE PARA CUPONES
+      case 'coupons':
+        return <CuponesManagement />;
       default:
         return (
           <>
@@ -101,15 +106,13 @@ const Dashboard: React.FC = () => {
                 </button>
               </div>
             </div>
-        </>
+        </>
         );
     }
   };
   
-  // El resto del componente Dashboard (return...) sigue igual.
-  
   return (
-  <div className="flex h-screen bg-gray-100"> 
+  <div className="flex h-screen bg-gray-100"> 
       {/* Mobile Header */}
       <div className="md:hidden bg-gray-900 text-white p-4 flex justify-between items-center">
         <h2 className="text-xl font-bold">
@@ -124,11 +127,11 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Sidebar Responsive */}
-    <aside className={`
-      w-full md:w-72 bg-gray-900 text-white flex flex-col p-4 md:p-5 shadow-xl
-      fixed md:fixed md:inset-y-0 z-48 transform transition-transform duration-300
-      ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-    `}>
+    <aside className={`
+      w-full md:w-72 bg-gray-900 text-white flex flex-col p-4 md:p-5 shadow-xl
+      fixed md:fixed md:inset-y-0 z-48 transform transition-transform duration-300
+      ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+    `}>
         {/* Close button for mobile */}
         <div className="flex justify-between items-center md:hidden mb-6">
           <h2 className="text-xl font-bold">
@@ -194,6 +197,19 @@ const Dashboard: React.FC = () => {
             <FaBoxOpen className="mr-4 text-2xl" />
             <span className="text-lg">Productos</span>
           </button>
+
+          {/* 🚨 NUEVO BOTÓN: CUPONES */}
+          <button
+            onClick={() => handleNavigation('coupons')} 
+            className={`flex items-center w-full px-4 md:px-5 py-4 text-base md:text-lg font-medium rounded-lg md:rounded-xl transition-all duration-200 ${
+              activeSection === 'coupons' 
+                ? 'bg-blue-600 shadow-lg md:transform md:scale-105' 
+                : 'hover:bg-gray-700 md:hover:transform md:hover:scale-105'
+            }`}
+          >
+            <FaTags className="mr-4 text-2xl" />
+            <span className="text-lg">Cupones</span>
+          </button>
         </nav>
         
         <button
@@ -214,9 +230,8 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Main Content */}
-     {/* Agregamos el padding izquierdo para compensar el sidebar fijo */}
-    <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto md:ml-72"> 
-      <div className="max-w-6xl mx-auto">
+    <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto md:ml-72"> 
+      <div className="max-w-6xl mx-auto">
           {renderContent()}
         </div>
       </main>
