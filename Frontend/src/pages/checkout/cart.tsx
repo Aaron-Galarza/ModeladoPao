@@ -3,7 +3,7 @@ import { FiArrowLeft, FiPlus, FiMinus,  FiShoppingCart, FiTrash2 } from 'react-i
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../../components/checkout/cartStore';
 
-const MAX_QUANTITY_PER_ITEM = 50;
+const MAX_QUANTITY_PER_ITEM = 1;
 
 interface CartItem {
   id: string;

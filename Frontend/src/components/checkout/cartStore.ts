@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const MAX_QUANTITY_PER_ITEM = 50;
+const MAX_QUANTITY_PER_ITEM = 1;
 
 export interface CartItem {
   id: string;
