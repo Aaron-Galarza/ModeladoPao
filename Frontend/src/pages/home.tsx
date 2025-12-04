@@ -3,7 +3,7 @@ import { /* Link, */ useNavigate } from 'react-router-dom';
 import ScrollAnimatedCarousel from '../components/design/ScrollAnimatedCarousel';
 import {
   FaHeart, /* FaPalette, */ FaHandHoldingHeart, FaBrush, FaAward,
-  FaInstagram, FaWhatsapp, FaEnvelope, FaPaw, FaUserAlt, FaLeaf,
+  FaInstagram, FaWhatsapp, FaEnvelope,  FaUserAlt, FaLeaf,
   FaGift
 } from 'react-icons/fa';
 import ContactForm from '../components/design/ContactForm';
