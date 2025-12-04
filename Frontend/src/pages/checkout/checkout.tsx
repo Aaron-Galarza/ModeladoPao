@@ -360,7 +360,6 @@ const CheckoutPage: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 sticky top-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 font-poppins">Resumen del Pedido</h2>
               
-              {/* Contenedor con scroll solo si es muy alto */}
               <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                 {items.map((item) => (
                   <div key={item.id} className="flex items-start space-x-3 p-2 border-b border-gray-50 last:border-0">
@@ -378,24 +377,27 @@ const CheckoutPage: React.FC = () => {
 
               <hr className="my-4 border-gray-100" />
 
-              {/* SECCIÓN CUPÓN */}
+              {/* SECCIÓN CUPÓN (CORREGIDA PARA MÓVIL) */}
               <div className="mb-4">
                 <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
                     Cupón de Descuento
                 </label>
-                <div className="flex gap-2">
+                {/* CAMBIO AQUÍ: flex-col en móvil (vertical), sm:flex-row en desktop (horizontal).
+                   El botón ahora ocupa todo el ancho en móvil para que sea fácil de tocar y no se salga.
+                */}
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     value={couponCode}
                     onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setDiscountAmount(0); setError(""); }}
                     placeholder="CÓDIGO"
-                    className="flex-1 p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-300 uppercase text-sm"
+                    className="w-full sm:flex-1 p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-300 uppercase text-sm"
                   />
                   <button
                     type="button"
                     onClick={applyCoupon}
                     disabled={isCouponLoading || !couponCode.trim()}
-                    className="bg-gray-800 hover:bg-gray-900 text-white px-4 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="w-full sm:w-auto bg-gray-800 hover:bg-gray-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {isCouponLoading ? "..." : "Aplicar"}
                   </button>
