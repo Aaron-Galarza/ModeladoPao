@@ -14,18 +14,17 @@ import {
   FaBox, 
   FaCalendarAlt,
   FaUser,
-  FaMapMarkerAlt
+  FaMapMarkerAlt,
+  FaTag // 1. Importamos el icono para el cupón
 } from "react-icons/fa";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { getAuth } from "firebase/auth";
 
-// Define la interfaz para los datos que recibe la Cloud Function
 interface IUpdateOrderStatusData {
     orderId: string;
     newStatus: string;
 }
 
-// Define las interfaces de los datos del pedido
 interface OrderProduct {
   idProducto: string;
   quantity: number;
@@ -47,9 +46,11 @@ interface OrderDetails {
   status: 'pending' | 'in-progress' | 'delivered' | 'cancelled';
   createdAt: Timestamp | Date;
   updatedAt?: Timestamp | Date;
+  // 2. Agregamos los campos opcionales del cupón a la interfaz
+  couponCode?: string;
+  discountAmount?: number;
 }
 
-// Se crea la referencia a la Cloud Function fuera del componente
 const updateOrderStatusCallable = httpsCallable<IUpdateOrderStatusData, any>(getFunctions(), 'updateOrderStatus');
 
 const OrdersManagement = () => {
@@ -58,7 +59,6 @@ const OrdersManagement = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // UseEffect para el listener de Firestore
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -100,7 +100,11 @@ const OrdersManagement = () => {
               notes: data.notes || data.notas,
               status: data.status || 'pending',
               createdAt: data.createdAt || Timestamp.now(),
-              updatedAt: data.updatedAt
+              updatedAt: data.updatedAt,
+              // 3. Mapeamos los datos del cupón desde Firestore
+              // Asegúrate de que tu función 'createOrder' esté guardando estos campos en la raíz del documento
+              couponCode: data.couponCode || undefined, 
+              discountAmount: Number(data.discountAmount) || 0
             });
           });
           
@@ -122,7 +126,6 @@ const OrdersManagement = () => {
     }
   }, []);
 
-  // La función useMemo se mantiene igual
   const filteredOrders = useMemo(() => {
     if (filter === "all") {
       return allOrders;
@@ -130,7 +133,6 @@ const OrdersManagement = () => {
     return allOrders.filter(order => order.status === filter);
   }, [allOrders, filter]);
 
-  // LA FUNCIÓN MODIFICADA PARA LLAMAR A LA CLOUD FUNCTION
   const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderDetails['status']) => {
     try {
       const auth = getAuth();
@@ -140,7 +142,6 @@ const OrdersManagement = () => {
         throw new Error("No hay usuario autenticado. Debes iniciar sesión.");
       }
       
-      // Llamada a la Cloud Function
       const result = await updateOrderStatusCallable({ 
         orderId: orderId, 
         newStatus: newStatus 
@@ -154,7 +155,6 @@ const OrdersManagement = () => {
     }
   };
 
-  // El resto de las funciones de ayuda se mantienen igual
   const openWhatsApp = (phone: string, guestName: string) => {
     const cleanPhone = phone.replace(/\D/g, '');
     let formattedPhone;
@@ -255,7 +255,6 @@ const OrdersManagement = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-4 md:mb-0">Gestión de Pedidos</h1>
         
-        {/* Filtros - Botones con menor padding vertical */}
         <div className="bg-white p-3 rounded-lg shadow-md">
           <div className="flex flex-wrap gap-2">
             {["all", "pending", "in-progress", "delivered", "cancelled"].map((status) => (
@@ -274,7 +273,6 @@ const OrdersManagement = () => {
         </div>
       </div>
 
-      {/* Lista de pedidos */}
       <div className="space-y-4">
         {filteredOrders.length === 0 ? (
           <div className="bg-white p-8 text-center rounded-lg shadow">
@@ -288,7 +286,6 @@ const OrdersManagement = () => {
           filteredOrders.map((order) => (
             <div key={order.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
               
-              {/* Header del pedido - ahora responsivo */}
               <div className="p-4 border-b border-gray-200">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 text-sm text-gray-500">
                   <div className="flex items-center space-x-4">
@@ -304,7 +301,6 @@ const OrdersManagement = () => {
                   <div className="flex items-center space-x-2">
                     <FaPhone className="text-gray-400" />
                     <span className="text-gray-500">{order.guestPhone}</span>
-                    {/* El ícono de WhatsApp ya está aquí, y es interactivo */}
                     <button
                       onClick={() => openWhatsApp(order.guestPhone, order.guestName)}
                       className="text-green-500 hover:text-green-600 transition-colors"
@@ -316,7 +312,6 @@ const OrdersManagement = () => {
                 </div>
               </div>
 
-              {/* Cuerpo del pedido (Productos y detalles) */}
               <div className="p-4">
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-2">
@@ -338,16 +333,45 @@ const OrdersManagement = () => {
                   </div>
                 </div>
 
-                {/* Resumen de pedido - ahora más claro en móviles */}
+                {/* 4. Sección de Totales con Lógica de Cupones */}
                 <div className="border-t border-gray-200 pt-4 space-y-2 text-sm">
-                  <div className="flex justify-between items-center font-semibold text-lg text-gray-800">
+                  
+                  {/* Si hay descuento, mostramos el desglose */}
+                  {(order.discountAmount && order.discountAmount > 0) ? (
+                    <>
+                      {/* Fila del Subtotal */}
+                      <div className="flex justify-between text-gray-500">
+                        <span>Subtotal:</span>
+                        <span>{formatPrice(order.totalAmount + order.discountAmount)}</span>
+                      </div>
+
+                      {/* Fila del Cupón */}
+                      <div className="flex justify-between text-green-600 items-center">
+                        <div className="flex items-center gap-2">
+                          <FaTag className="text-green-500" />
+                          <span className="font-medium">
+                            Cupón: <span className="uppercase bg-green-100 px-2 py-0.5 rounded text-xs">{order.couponCode}</span>
+                          </span>
+                        </div>
+                        <span className="font-bold">-{formatPrice(order.discountAmount)}</span>
+                      </div>
+                      
+                      {/* Separador */}
+                      <hr className="border-dashed border-gray-200" />
+                    </>
+                  ) : null}
+
+                  {/* Fila del Total Final */}
+                  <div className="flex justify-between items-center font-bold text-lg text-gray-800">
                     <div className="flex items-center gap-2">
-                      <FaMoneyBill className="text-green-500" />
+                      <FaMoneyBill className={order.discountAmount ? "text-green-600" : "text-gray-600"} />
                       <span>Total:</span>
                     </div>
                     <span>{formatPrice(order.totalAmount)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-600">
+
+                  {/* Resto de la información (Entrega, Pago, Estado) */}
+                  <div className="flex justify-between text-gray-600 pt-2">
                     <div className="flex items-center gap-2">
                       <FaMapMarkerAlt className="text-gray-400" />
                       <span className="font-medium">Entrega:</span>
@@ -379,7 +403,6 @@ const OrdersManagement = () => {
                 )}
               </div>
               
-              {/* Footer con acciones */}
               <div className="bg-gray-50 p-4 flex flex-wrap gap-2 border-t border-gray-200">
                 {order.status !== "delivered" && order.status !== "cancelled" && (
                     <button

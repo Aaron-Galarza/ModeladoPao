@@ -63,7 +63,7 @@ const content = {
   ],
   cta: {
     title: "¿Listo para pedir?",
-    desc: "Hacé tu pedido online en segundos o escribinos por WhatsApp si tenés dudas.",
+    desc: "Hacé tu pedido online en segundos o escribime por WhatsApp si tenés dudas.",
     primaryLabel: "Ver catálogo",
     primaryHref: "/catalogo",
     secondaryLabel: "WhatsApp",

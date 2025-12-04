@@ -3,7 +3,8 @@ import { /* Link, */ useNavigate } from 'react-router-dom';
 import ScrollAnimatedCarousel from '../components/design/ScrollAnimatedCarousel';
 import {
   FaHeart, /* FaPalette, */ FaHandHoldingHeart, FaBrush, FaAward,
-  FaInstagram, FaWhatsapp, FaEnvelope, FaPaw, FaUserAlt, FaLeaf
+  FaInstagram, FaWhatsapp, FaEnvelope, FaPaw, FaUserAlt, FaLeaf,
+  FaGift
 } from 'react-icons/fa';
 import ContactForm from '../components/design/ContactForm';
 
@@ -12,7 +13,7 @@ const ACCENT_GOLD = '#e6c25c';
 // (Opcional) Si querés validar que la colección exista antes de navegar,
 // llená este array con los nombres EXACTOS que tenés en tu catálogo (Category.nombre)
 const VALID_CATEGORIES = [
-  'Animales',
+  'Navidad',
   'Personajes',
   'Flores',
   'Bodas',
@@ -33,7 +34,7 @@ const HomePage: React.FC = () => {
   };
 
   const featured = [
-    { name: 'Animales', icon: <FaPaw className="text-3xl" />, count: '+ figuras', bg: 'from-white to-pink-50', hover: 'text-pink-600' },
+    { name: 'Navidad', icon: <FaGift className="text-3xl" />, count: '+ figuras', bg: 'from-white to-pink-50', hover: 'text-pink-600' },
     { name: 'Personajes', icon: <FaUserAlt className="text-3xl" />, count: '+ diseños', bg: 'from-white to-purple-50', hover: 'text-purple-600' },
     { name: 'Flores', icon: <FaLeaf className="text-3xl" />, count: '+ modelos', bg: 'from-white to-teal-50', hover: 'text-teal-600' },
     { name: 'Bodas', icon: <FaHeart className="text-3xl" />, count: '+ opciones', bg: 'from-white to-amber-50', hover: 'text-amber-600' },
@@ -67,7 +68,7 @@ const HomePage: React.FC = () => {
               Arte en Porcelana Fría
             </span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-cursive font-bold text-gray-800 mb-4">
+          <h1 className="text-4xl md:text-6xl font-cursive font-bold text-[#E6B38E] mb-4">
             Modelado <span className="text-[#f188af]">Pao</span>
           </h1>
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-200 max-w-3xl md:max-w-4xl mx-auto mt-6">
@@ -93,7 +94,7 @@ const HomePage: React.FC = () => {
               Colecciones Destacadas
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto font-sans">
-              Explora nuestras creaciones más buscadas y encuentra la pieza perfecta.
+              Explora mis creaciones más buscadas y encontra la pieza perfecta.
             </p>
           </div>
 

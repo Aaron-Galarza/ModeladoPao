@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-// 🚨 CORRECCIÓN: Usar require para que TypeScript trate 'cors' como una función callable
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const cors = require('cors'); 
 
@@ -26,7 +26,8 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
             shippingAddress, 
             paymentMethod, 
             notes,
-            discountCode // 🚨 NUEVO: Recibimos el código de descuento del frontend
+            discountCode,
+            couponCode // ✅ CAMBIO 1: Agregamos esto para leer lo que manda tu Front
         } = req.body;
 
         // 3. Validar campos obligatorios
@@ -76,8 +77,12 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
             // ----------------------------------------------------
             // 🚨 INTEGRACIÓN: LÓGICA DE DESCUENTO NATIVA
             // ----------------------------------------------------
-            if (discountCode) {
-                const codeToSearch = String(discountCode).toUpperCase();
+            
+            // ✅ CAMBIO 2: Usamos discountCode O couponCode (cualquiera que llegue)
+            const codeToProcess = discountCode || couponCode;
+
+            if (codeToProcess) {
+                const codeToSearch = String(codeToProcess).toUpperCase();
                 try {
                     const discountDoc = await db.collection('Descuentos').doc(codeToSearch).get();
 
@@ -126,8 +131,11 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
                 guestName,
                 products: productsForOrder,
                 subtotalAmount, // 🚨 Monto antes del descuento
-                discountApplied: discountApplied, // Cuánto se descontó
-                usedDiscountCode: usedDiscountCode, // El código usado (o null)
+                
+                // ✅ CAMBIO 3: Guardamos con los nombres que TU Admin Panel espera leer
+                couponCode: usedDiscountCode,   
+                discountAmount: discountApplied, 
+
                 totalAmount: finalAmount, // 🚨 MONTO FINAL A PAGAR
                 deliveryType,
                 shippingAddress: deliveryType === 'delivery' ? shippingAddress : null, 
