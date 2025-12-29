@@ -9,6 +9,8 @@ interface ICreateProductData {
     precio: number;
     descripcion?: string;
     categoria?: string;
+    stock: number
+    isStockeable: boolean
 }
 
 export const listarProductos = functions.https.onRequest(async (req, res) => {
@@ -61,7 +63,11 @@ export const createProduct = functions.https.onCall(async (request: functions.ht
         }
 
         // 3. Validación de datos
-        const { nombre, precio, descripcion, categoria } = request.data;
+        const { nombre, precio, descripcion, categoria, stock, isStockeable } = request.data;
+
+        if (isStockeable && (typeof stock !== 'number' || stock < 0)) {
+            throw new functions.https.HttpsError('invalid-argument', 'Si controlas stock, debe ser un número mayor o igual a 0.');
+        }
 
         if (!nombre || typeof nombre !== 'string') {
             throw new functions.https.HttpsError('invalid-argument', 'El nombre es obligatorio y debe ser texto.');
@@ -77,6 +83,8 @@ export const createProduct = functions.https.onCall(async (request: functions.ht
             precio: Number(precio.toFixed(2)),
             descripcion: descripcion?.trim() || '',
             categoria: categoria?.trim() || 'varios',
+            stock: isStockeable ? Math.floor(stock) : 0,
+            isStockeable: !!isStockeable
         };
 
         const docRef = await admin.firestore().collection('Productos').add(newProduct);

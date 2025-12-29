@@ -18,12 +18,12 @@ export interface DiscountResponse {
     message: string;
 }
 
-export const checkCoupon = async (couponCode: string): Promise<DiscountResponse> => {
+export const checkCoupon = async (discountCode: string): Promise<DiscountResponse> => {
     try {
         console.log('📤 Verificando cupón con axios via proxy:', checkCouponURL);
         
         const response = await axios.post<DiscountResponse>(checkCouponURL, { 
-            couponCode 
+            discountCode 
         }, {
             headers: {
                 'Content-Type': 'application/json',

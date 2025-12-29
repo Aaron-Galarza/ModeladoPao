@@ -15,7 +15,7 @@ import { useNavigate, Link } from "react-router-dom";
 const CheckoutPage: React.FC = () => {
   const { items, getTotal, clearCart } = useCartStore();
   const navigate = useNavigate(); // 🚨 NUEVOS ESTADOS PARA CUPONES
-  const [couponCode, setCouponCode] = useState<string>("");
+  const [discountCode, setDiscountCode] = useState<string>("");
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [isCouponLoading] = useState(false); // 🚨 FIN NUEVOS ESTADOS
   const [formData, setFormData] = useState({
@@ -120,13 +120,13 @@ const CheckoutPage: React.FC = () => {
   }; // 🚨 Nueva lógica para el cupón
 
   const handleCouponChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCouponCode(e.target.value.toUpperCase());
+    setDiscountCode(e.target.value.toUpperCase()); // Cambia setCouponCode por setDiscountCode
     setDiscountAmount(0); // Resetear el descuento
     setError("");
   };
 
   const applyCoupon = async () => {
-    if (couponCode.length < 3) {
+    if (discountCode.length < 3) {
       setError("Ingresa un código de cupón válido.");
       setDiscountAmount(0);
       return;
@@ -136,7 +136,7 @@ const CheckoutPage: React.FC = () => {
     setError("");
 
     try {
-      const result: any = await checkCoupon(couponCode);
+      const result: any = await checkCoupon(discountCode);
 
       if (result.valid) {
         const total = getTotal();
@@ -192,7 +192,7 @@ const CheckoutPage: React.FC = () => {
             : undefined,
         paymentMethod: formData.paymentMethod,
         notes: formData.notes || "", // 🚨 Agregar el código de cupón al objeto de datos
-        couponCode: couponCode.trim() || undefined,
+        discountCode: discountCode.trim() || undefined,
       }; // 2. Llamar a la API para crear el pedido // ¡IMPORTANTE! El backend (Cloud Function) calculará el precio final real
 
       const orderId = await createOrder(orderData); // 3. Crear el objeto de pedido completo para pasarlo al estado de la ruta
@@ -695,7 +695,7 @@ const CheckoutPage: React.FC = () => {
                                    {" "}
                   <input
                     type="text"
-                    value={couponCode}
+                    value={discountCode}
                     onChange={handleCouponChange}
                     placeholder="Ingresa tu cupón"
                     className="flex-1 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all uppercase"
@@ -710,7 +710,7 @@ const CheckoutPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={applyCoupon}
-                    disabled={isCouponLoading || couponCode.trim() === ""}
+                    disabled={isCouponLoading || discountCode.trim() === ""}
                     className="bg-pink-500 hover:bg-pink-600 text-white px-5 py-3 rounded-xl transition-colors disabled:opacity-50"
                   >
                     {isCouponLoading ? "Verificando..." : "Aplicar"}
@@ -720,7 +720,7 @@ const CheckoutPage: React.FC = () => {
                                {" "}
                 {discountAmount > 0 && (
                   <p className="text-sm text-green-600 font-semibold mt-1">
-                                        ¡Cupón "{couponCode}" aplicado!
+                                        ¡Cupón "{discountCode}" aplicado!
                     Descuento: -${discountAmount.toFixed(2)}.                  {" "}
                   </p>
                 )}
