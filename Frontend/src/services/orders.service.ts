@@ -51,10 +51,6 @@ export interface OrderData {
   deliveryType: string;
   shippingAddress?: string;
   paymentMethod: string;
-<<<<<<< HEAD
-  discountCode?: string;
-=======
->>>>>>> e86ad38a1156c89bfeb9c60e33ef3335e6b217f3
   notes?: string;
   // Campos del cupón para envío
   couponCode?: string;
