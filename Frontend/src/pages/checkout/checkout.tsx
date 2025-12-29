@@ -9,15 +9,53 @@ import {
 } from "react-icons/fi";
 import { useCartStore } from "../../components/checkout/cartStore";
 import { createOrder, OrderData } from "../../services/orders.service";
-import { checkCoupon } from "../../services/coupons.service"; // Agregar este import
+import { checkCoupon } from "../../services/coupons.service";
 import { useNavigate, Link } from "react-router-dom";
+
+// --- COMPONENTES REUTILIZABLES ---
+
+const FormInput = ({ label, name, value, onChange, error, ...props }: any) => (
+  <div>
+    <label className="block text-sm font-medium mb-1.5 text-gray-700">{label}</label>
+    <input
+      name={name}
+      value={value}
+      onChange={onChange}
+      className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all outline-none ${
+        error ? "border-red-500" : "border-gray-200"
+      }`}
+      {...props}
+    />
+    {error && <p className="mt-1 text-xs text-red-500 font-medium">{error}</p>}
+  </div>
+);
+
+const OptionButton = ({ selected, onClick, icon: Icon, label }: any) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`p-3 border rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-2 h-full w-full ${
+      selected
+        ? "border-pink-500 bg-pink-50 text-pink-700 ring-1 ring-pink-500"
+        : "border-gray-200 hover:border-pink-300 bg-white"
+    }`}
+  >
+    <Icon className={`text-xl ${selected ? "text-pink-600" : "text-gray-400"}`} />
+    <span className="text-sm font-medium text-center leading-tight">{label}</span>
+  </button>
+);
+
+// --- PÁGINA PRINCIPAL ---
 
 const CheckoutPage: React.FC = () => {
   const { items, getTotal, clearCart } = useCartStore();
-  const navigate = useNavigate(); // 🚨 NUEVOS ESTADOS PARA CUPONES
-  const [discountCode, setDiscountCode] = useState<string>("");
+  const navigate = useNavigate();
+  
+  // Estados
+  const [couponCode, setCouponCode] = useState<string>("");
   const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [isCouponLoading] = useState(false); // 🚨 FIN NUEVOS ESTADOS
+  const [isCouponLoading, setIsCouponLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     guestName: "",
     guestEmail: "",
@@ -31,189 +69,119 @@ const CheckoutPage: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(""); // Lógica para manejar cambios y validación (sin cambios)
+  const [error, setError] = useState("");
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    if (name === "guestName") {
-      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value) && value !== "") return;
-      if (value.length > 50) return;
-    }
-    if (name === "guestPhone") {
-      if (!/^\d*$/.test(value) && value !== "") return;
-      if (value.length > 15) return;
-    }
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-    if (errors[name]) {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        [name]: "",
-      }));
-    }
+    // Validaciones simples al escribir
+    if (name === "guestName" && (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value) || value.length > 50)) return;
+    if (name === "guestPhone" && (!/^\d*$/.test(value) || value.length > 15)) return;
+
+    setFormData({ ...formData, [name]: value });
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
-  const handleDeliveryTypeChange = (type: "pickup" | "delivery") => {
-    setFormData((prevState) => ({
-      ...prevState,
+
+  const handleDeliveryTypeChange = (type: string) => {
+    setFormData((prev) => ({
+      ...prev,
       deliveryType: type,
       ...(type === "pickup" && { shippingAddress: "", shippingCity: "" }),
     }));
-    if (type === "pickup") {
-      setErrors((prevErrors) => {
-        const newErrors = { ...prevErrors };
-        delete newErrors.shippingAddress;
-        delete newErrors.shippingCity;
-        return newErrors;
-      });
-    }
+    if (type === "pickup") setErrors((prev) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { shippingAddress, shippingCity, ...rest } = prev;
+      return rest;
+    });
   };
 
-  const handlePaymentMethodChange = (method: "cash" | "transfer") => {
-    setFormData((prevState) => ({
-      ...prevState,
-      paymentMethod: method,
-    }));
-  };
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    const phoneRegex = /^\d{8,15}$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,50}$/;
 
-    if (!formData.guestName.trim()) {
-      newErrors.guestName = "El nombre es obligatorio";
-    } else if (!nameRegex.test(formData.guestName)) {
-      newErrors.guestName =
-        "El nombre debe contener solo letras y tener entre 2 y 50 caracteres";
-    }
-
-    if (!formData.guestEmail.trim()) {
-      newErrors.guestEmail = "El email es obligatorio";
-    } else if (!emailRegex.test(formData.guestEmail)) {
-      newErrors.guestEmail = "Ingresa un email válido";
-    }
-
-    if (!formData.guestPhone.trim()) {
-      newErrors.guestPhone = "El teléfono es obligatorio";
-    } else if (!phoneRegex.test(formData.guestPhone.replace(/\s/g, ""))) {
-      newErrors.guestPhone =
-        "Ingresa un teléfono válido (solo números, 8-15 dígitos)";
-    }
+    if (!formData.guestName.trim()) newErrors.guestName = "Nombre requerido";
+    if (!formData.guestEmail.trim() || !emailRegex.test(formData.guestEmail)) newErrors.guestEmail = "Email inválido";
+    if (!formData.guestPhone.trim() || formData.guestPhone.length < 8) newErrors.guestPhone = "Teléfono inválido";
 
     if (formData.deliveryType === "delivery") {
-      if (!formData.shippingAddress.trim()) {
-        newErrors.shippingAddress =
-          "La dirección es obligatoria para envío a domicilio";
-      }
-      if (!formData.shippingCity.trim()) {
-        newErrors.shippingCity =
-          "La ciudad es obligatoria para envío a domicilio";
-      }
+      if (!formData.shippingAddress.trim()) newErrors.shippingAddress = "Dirección requerida";
+      if (!formData.shippingCity.trim()) newErrors.shippingCity = "Ciudad requerida";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }; // 🚨 Nueva lógica para el cupón
-
-  const handleCouponChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDiscountCode(e.target.value.toUpperCase()); // Cambia setCouponCode por setDiscountCode
-    setDiscountAmount(0); // Resetear el descuento
-    setError("");
   };
 
   const applyCoupon = async () => {
-    if (discountCode.length < 3) {
-      setError("Ingresa un código de cupón válido.");
-      setDiscountAmount(0);
-      return;
-    }
-
-    setIsLoading(true);
+    if (couponCode.length < 3) return setError("Código muy corto.");
+    setIsCouponLoading(true);
     setError("");
 
     try {
-      const result: any = await checkCoupon(discountCode);
-
+      const result: any = await checkCoupon(couponCode);
       if (result.valid) {
         const total = getTotal();
-        let discount = 0;
-
-        if (result.type === "percentage") {
-          discount = total * (result.value / 100);
-        } else {
-          discount = result.value;
-        }
-
-        // Asegurar que el descuento no sea mayor al total
-        discount = Math.min(discount, total);
-
-        setDiscountAmount(discount);
+        const discount = result.type === "percentage" 
+          ? total * (result.value / 100) 
+          : result.value;
+        setDiscountAmount(Math.min(discount, total));
         setError("");
       } else {
         setDiscountAmount(0);
-        setError(result.message || "Cupón inválido o expirado.");
+        setError(result.message || "Cupón inválido.");
       }
-    } catch (error: any) {
+    } catch (err: any) {
       setDiscountAmount(0);
-      setError(error.message || "Error al verificar cupón");
+      setError(err.message || "Error al verificar cupón");
     } finally {
-      setIsLoading(false);
+      setIsCouponLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) {
-      setError("Por favor, corrige los errores en el formulario");
-      return;
+        setError("Completa los campos obligatorios marcados en rojo.");
+        // Scroll suave hacia arriba si hay error
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
     }
-
     setIsLoading(true);
     setError("");
 
     try {
-      // 1. Crear el objeto para enviar a la API
       const orderData: OrderData = {
-        products: items.map((item) => ({
-          idProducto: item.id,
-          quantity: item.quantity,
-        })),
+        products: items.map((item) => ({ idProducto: item.id, quantity: item.quantity })),
         guestName: formData.guestName,
         guestEmail: formData.guestEmail,
         guestPhone: formData.guestPhone,
         deliveryType: formData.deliveryType,
-        shippingAddress:
-          formData.deliveryType === "delivery"
-            ? `${formData.shippingAddress}, ${formData.shippingCity}`
-            : undefined,
+        shippingAddress: formData.deliveryType === "delivery" ? `${formData.shippingAddress}, ${formData.shippingCity}` : undefined,
         paymentMethod: formData.paymentMethod,
-        notes: formData.notes || "", // 🚨 Agregar el código de cupón al objeto de datos
-        discountCode: discountCode.trim() || undefined,
-      }; // 2. Llamar a la API para crear el pedido // ¡IMPORTANTE! El backend (Cloud Function) calculará el precio final real
+        notes: formData.notes || "",
+        
+        discountAmount: discountAmount, 
+        couponCode: couponCode.trim() || undefined, 
+        // @ts-ignore
+        discountCode: couponCode.trim() || undefined, 
+      };
 
-      const orderId = await createOrder(orderData); // 3. Crear el objeto de pedido completo para pasarlo al estado de la ruta
-      const fullOrderDetails = {
-        ...orderData,
-        id: orderId, // Agregar el ID devuelto por la API
-        products: items, // Pasar los productos del carrito con todos sus detalles (nombre, precio, etc.) // Usamos el total calculado en el frontend (subtotal - descuento del frontend).
-        // Nota: el total real es el que viene de la API, pero para la confirmación visual usamos este.
-        totalAmount: getTotal() - discountAmount,
-        discountAmount: discountAmount, // Pasamos el descuento aplicado en el frontend
-      }; // 4. Vaciar el carrito
-      clearCart(); // 5. Navegar a la página de confirmación, pasando los datos en el 'state'
+      const orderId = await createOrder(orderData);
+      const currentTotal = getTotal(); 
+      clearCart(); 
+
       navigate(`/order-confirmation/${orderId}`, {
-        state: { order: fullOrderDetails },
+        state: { 
+            order: {
+                ...orderData,
+                id: orderId,
+                products: items,
+                totalAmount: currentTotal - discountAmount,
+                discountAmount: discountAmount, 
+            } 
+        },
       });
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Error al procesar el pedido. Intente de nuevo."
-      );
+    } catch (err: any) {
+      setError(err.message || "Error al procesar el pedido.");
     } finally {
       setIsLoading(false);
     }
@@ -221,627 +189,261 @@ const CheckoutPage: React.FC = () => {
 
   if (items.length === 0) {
     return (
-      <div
-        className="min-h-screen"
-        style={{ backgroundColor: "rgb(240, 236, 238)" }}
-      >
-               {" "}
-        <div
-          className="absolute inset-0"
-          style={{ backgroundColor: "rgb(240, 236, 238)" }}
-        />
-               {" "}
-        <div className="relative z-10 container mx-auto max-w-4xl py-12 px-4 min-h-screen flex flex-col">
-                   {" "}
-          <div className="flex items-center mb-8">
-                       {" "}
-            <Link
-              to="/catalogo"
-              className="flex items-center text-pink-600 hover:text-pink-700 transition-colors font-semibold"
-            >
-                            <FiArrowLeft className="mr-2" />              Volver
-              al Catálogo            {" "}
-            </Link>
-                     {" "}
-          </div>
-                   {" "}
-          <div className="flex-1 flex items-center justify-center">
-                       {" "}
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center transform hover:scale-[1.01] transition-transform duration-200 w-full max-w-md">
-                           {" "}
-              <div className="flex justify-center mb-6">
-                               {" "}
-                <div className="w-24 h-24 bg-pink-100 rounded-full flex items-center justify-center">
-                                   {" "}
-                  <FiCheckCircle className="w-12 h-12 text-pink-500" />         
-                       {" "}
-                </div>
-                             {" "}
-              </div>
-                           {" "}
-              <h2 className="text-3xl font-bold text-gray-800 mb-4 font-poppins">
-                Carrito vacío
-              </h2>
-                           {" "}
-              <p className="text-gray-600 mb-8 text-lg">
-                No hay productos para procesar el pago
-              </p>
-                           {" "}
-              <Link
-                to="/catalogo"
-                className="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-8 py-4 rounded-xl 
-                  hover:from-pink-600 hover:to-pink-700 transition-all duration-300 
-                  font-semibold text-lg shadow-lg hover:shadow-xl inline-block"
-              >
-                                Explorar Productos              {" "}
-              </Link>
-                         {" "}
+      <div className="min-h-screen flex items-center justify-center bg-[#f0ecee] p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md w-full">
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center animate-bounce-slow">
+              <FiCheckCircle className="w-10 h-10 text-pink-500" />
             </div>
-                     {" "}
           </div>
-                 {" "}
+          <h2 className="text-2xl font-bold text-gray-800 mb-3 font-poppins">Carrito vacío</h2>
+          <p className="text-gray-600 mb-6 text-base">Agrega productos para continuar.</p>
+          <Link to="/catalogo" className="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl inline-block w-full">
+            Explorar Productos
+          </Link>
         </div>
-             {" "}
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: "rgb(240, 236, 238)" }}
-    >
-           {" "}
-      <div
-        className="absolute inset-0"
-        style={{ backgroundColor: "rgb(240, 236, 238)" }}
-      />
-           {" "}
-      <div className="relative z-10 container mx-auto max-w-6xl py-12 px-4">
-               {" "}
-        <div className="flex items-center mb-8">
-                   {" "}
-          <Link
-            to="/cart"
-            className="flex items-center text-pink-600 hover:text-pink-700 transition-colors font-semibold"
-          >
-                        <FiArrowLeft className="mr-2" />            Volver al
-            Carrito          {" "}
+    <div className="min-h-screen bg-[#f0ecee] py-8 px-4 sm:px-6">
+      <div className="container mx-auto max-w-5xl">
+        <div className="flex items-center mb-6">
+          <Link to="/cart" className="flex items-center text-pink-600 hover:text-pink-700 font-semibold text-sm sm:text-base">
+            <FiArrowLeft className="mr-2" /> Volver al Carrito
           </Link>
-                 {" "}
         </div>
-               {" "}
-        <h1 className="text-4xl font-bold text-gray-800 mb-2 text-center font-poppins">
+
+        {/* Header Responsive */}
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2 text-center font-poppins">
           Finalizar Compra
         </h1>
-               {" "}
-        <p className="text-gray-600 text-center mb-8">
-          Completa tus datos para procesar el pedido
+        <p className="text-gray-600 text-center mb-8 text-sm sm:text-base">
+          Ingresa tus datos para el envío o retiro
         </p>
-               {" "}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                   {" "}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-                       {" "}
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6 font-poppins flex items-center">
-                            <FiMapPin className="mr-3 text-pink-500" />         
-                  Información de Entrega            {" "}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+          {/* --- COLUMNA IZQUIERDA: FORMULARIO --- */}
+          <div className="order-2 lg:order-1 bg-white rounded-2xl shadow-lg p-5 sm:p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-5 font-poppins flex items-center">
+              <FiMapPin className="mr-3 text-pink-500" /> Tus Datos
             </h2>
-                       {" "}
-            <form onSubmit={handleSubmit} className="space-y-6">
-                           {" "}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               {" "}
-                <div>
-                                   {" "}
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    Nombre completo *
-                  </label>
-                                   {" "}
-                  <input
-                    type="text"
-                    name="guestName"
-                    value={formData.guestName}
-                    onChange={handleInputChange}
-                    required
-                    className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all ${
-                      errors.guestName ? "border-red-500" : "border-gray-200"
-                    }`}
-                    placeholder="Ej: María González"
-                    maxLength={50}
-                  />
-                                   {" "}
-                  {errors.guestName && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.guestName}
-                    </p>
-                  )}
-                                 {" "}
-                </div>
-                               {" "}
-                <div>
-                                   {" "}
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    Teléfono *
-                  </label>
-                                   {" "}
-                  <input
-                    type="tel"
-                    name="guestPhone"
-                    value={formData.guestPhone}
-                    onChange={handleInputChange}
-                    required
-                    className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all ${
-                      errors.guestPhone ? "border-red-500" : "border-gray-200"
-                    }`}
-                    placeholder="Ej: 1123456789"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={15}
-                  />
-                                   {" "}
-                  {errors.guestPhone && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.guestPhone}
-                    </p>
-                  )}
-                                 {" "}
-                </div>
-                             {" "}
-              </div>
-                           {" "}
-              <div>
-                               {" "}
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Email *
-                </label>
-                               {" "}
-                <input
-                  type="email"
-                  name="guestEmail"
-                  value={formData.guestEmail}
-                  onChange={handleInputChange}
-                  required
-                  className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all ${
-                    errors.guestEmail ? "border-red-500" : "border-gray-200"
-                  }`}
-                  placeholder="Ej: tu@email.com"
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <FormInput 
+                label="Nombre completo *" 
+                name="guestName" 
+                value={formData.guestName} 
+                onChange={handleInputChange} 
+                error={errors.guestName} 
+                placeholder="Nombre y Apellido" 
+              />
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <FormInput 
+                    label="Email *" 
+                    name="guestEmail" 
+                    value={formData.guestEmail} 
+                    onChange={handleInputChange} 
+                    error={errors.guestEmail} 
+                    placeholder="ejemplo@correo.com" 
+                    type="email" 
                 />
-                               {" "}
-                {errors.guestEmail && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.guestEmail}
-                  </p>
-                )}
-                             {" "}
+                <FormInput 
+                    label="Teléfono *" 
+                    name="guestPhone" 
+                    value={formData.guestPhone} 
+                    onChange={handleInputChange} 
+                    error={errors.guestPhone} 
+                    placeholder="Sin 0 y sin 15" 
+                    type="tel" 
+                    maxLength={15} 
+                />
               </div>
-                           {" "}
+
               <div>
-                               {" "}
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Tipo de entrega *
-                </label>
-                               {" "}
-                <div className="grid grid-cols-2 gap-3">
-                                   {" "}
-                  <button
-                    type="button"
-                    onClick={() => handleDeliveryTypeChange("pickup")}
-                    className={`p-3 border rounded-xl text-center transition-all flex flex-col items-center justify-center ${
-                      formData.deliveryType === "pickup"
-                        ? "border-pink-500 bg-pink-50 text-pink-700"
-                        : "border-gray-200 hover:border-pink-300"
-                    }`}
-                  >
-                                        <FiMapPin className="mb-1 text-lg" />   
-                                   {" "}
-                    <span className="text-sm">Retiro en local</span>           
-                         {" "}
-                  </button>
-                                   {" "}
-                  <button
-                    type="button"
-                    onClick={() => handleDeliveryTypeChange("delivery")}
-                    className={`p-3 border rounded-xl text-center transition-all flex flex-col items-center justify-center ${
-                      formData.deliveryType === "delivery"
-                        ? "border-pink-500 bg-pink-50 text-pink-700"
-                        : "border-gray-200 hover:border-pink-300"
-                    }`}
-                  >
-                                        <FiTruck className="mb-1 text-lg" />   
-                                   {" "}
-                    <span className="text-sm">Envío a domicilio</span>         
-                           {" "}
-                  </button>
-                                 {" "}
+                <label className="block text-sm font-medium mb-2 text-gray-700">Tipo de entrega *</label>
+                <div className="grid grid-cols-2 gap-3 h-auto">
+                  <OptionButton 
+                    selected={formData.deliveryType === "pickup"} 
+                    onClick={() => handleDeliveryTypeChange("pickup")} 
+                    icon={FiMapPin} 
+                    label="Retiro en local" 
+                  />
+                  <OptionButton 
+                    selected={formData.deliveryType === "delivery"} 
+                    onClick={() => handleDeliveryTypeChange("delivery")} 
+                    icon={FiTruck} 
+                    label="Envío a domicilio" 
+                  />
                 </div>
-                             {" "}
               </div>
-                           {" "}
+
               {formData.deliveryType === "delivery" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                   {" "}
-                  <div>
-                                       {" "}
-                    <label className="block text-sm font-medium mb-2 text-gray-700">
-                      Dirección de envío *
-                    </label>
-                                       {" "}
-                    <input
-                      type="text"
-                      name="shippingAddress"
-                      value={formData.shippingAddress}
-                      onChange={handleInputChange}
-                      required={formData.deliveryType === "delivery"}
-                      className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all ${
-                        errors.shippingAddress
-                          ? "border-red-500"
-                          : "border-gray-200"
-                      }`}
-                      placeholder="Ej: Av. Siempre Viva 742"
-                    />
-                                       {" "}
-                    {errors.shippingAddress && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.shippingAddress}
-                      </p>
-                    )}
-                                     {" "}
-                  </div>
-                                   {" "}
-                  <div>
-                                       {" "}
-                    <label className="block text-sm font-medium mb-2 text-gray-700">
-                      Ciudad *
-                    </label>
-                                       {" "}
-                    <input
-                      type="text"
-                      name="shippingCity"
-                      value={formData.shippingCity}
-                      onChange={handleInputChange}
-                      required={formData.deliveryType === "delivery"}
-                      className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all ${
-                        errors.shippingCity
-                          ? "border-red-500"
-                          : "border-gray-200"
-                      }`}
-                      placeholder="Ej: Springfield"
-                    />
-                                       {" "}
-                    {errors.shippingCity && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.shippingCity}
-                      </p>
-                    )}
-                                     {" "}
-                  </div>
-                                 {" "}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fadeIn">
+                  <FormInput 
+                    label="Dirección *" 
+                    name="shippingAddress" 
+                    value={formData.shippingAddress} 
+                    onChange={handleInputChange} 
+                    error={errors.shippingAddress} 
+                    placeholder="Calle y Número" 
+                  />
+                  <FormInput 
+                    label="Ciudad *" 
+                    name="shippingCity" 
+                    value={formData.shippingCity} 
+                    onChange={handleInputChange} 
+                    error={errors.shippingCity} 
+                    placeholder="Resistencia" 
+                  />
                 </div>
               )}
-                           {" "}
+
               <div>
-                               {" "}
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Método de pago *
-                </label>
-                               {" "}
+                <label className="block text-sm font-medium mb-2 text-gray-700">Método de pago *</label>
                 <div className="grid grid-cols-2 gap-3">
-                                   {" "}
-                  <button
-                    type="button"
-                    onClick={() => handlePaymentMethodChange("cash")}
-                    className={`p-3 border rounded-xl text-center transition-all flex flex-col items-center justify-center ${
-                      formData.paymentMethod === "cash"
-                        ? "border-pink-500 bg-pink-50 text-pink-700"
-                        : "border-gray-200 hover:border-pink-300"
-                    }`}
-                  >
-                                       {" "}
-                    <FiDollarSign className="mb-1 text-lg" />                   {" "}
-                    <span className="text-sm">Efectivo</span>                 {" "}
-                  </button>
-                                   {" "}
-                  <button
-                    type="button"
-                    onClick={() => handlePaymentMethodChange("transfer")}
-                    className={`p-3 border rounded-xl text-center transition-all flex flex-col items-center justify-center ${
-                      formData.paymentMethod === "transfer"
-                        ? "border-pink-500 bg-pink-50 text-pink-700"
-                        : "border-gray-200 hover:border-pink-300"
-                    }`}
-                  >
-                                       {" "}
-                    <FiCreditCard className="mb-1 text-lg" />                   {" "}
-                    <span className="text-sm">Transferencia</span>             
-                       {" "}
-                  </button>
-                                 {" "}
+                  <OptionButton 
+                    selected={formData.paymentMethod === "cash"} 
+                    onClick={() => setFormData({ ...formData, paymentMethod: "cash" })} 
+                    icon={FiDollarSign} 
+                    label="Efectivo" 
+                  />
+                  <OptionButton 
+                    selected={formData.paymentMethod === "transfer"} 
+                    onClick={() => setFormData({ ...formData, paymentMethod: "transfer" })} 
+                    icon={FiCreditCard} 
+                    label="Transferencia" 
+                  />
                 </div>
-                             {" "}
               </div>
-                           {" "}
+
               <div>
-                               {" "}
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Notas adicionales (opcional)
-                </label>
-                               {" "}
+                <label className="block text-sm font-medium mb-2 text-gray-700">Notas (opcional)</label>
                 <textarea
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
-                  rows={3}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all"
-                  placeholder="Indicaciones especiales para tu pedido..."
+                  rows={2}
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 transition-all text-sm"
+                  placeholder="Ej: Tocar timbre, casa de rejas..."
                 />
-                             {" "}
               </div>
-                           {" "}
+
               {error && (
-                <div className="p-4 bg-red-50 text-red-700 rounded-xl border border-red-200">
-                                    {error}               {" "}
+                <div className="p-3 bg-red-50 text-red-600 rounded-xl border border-red-100 text-sm font-medium text-center">
+                    {error}
                 </div>
               )}
-                           {" "}
+
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-4 rounded-xl 
-                  hover:from-pink-600 hover:to-pink-700 transition-all duration-300 
-                  font-semibold text-lg shadow-lg hover:shadow-xl disabled:opacity-75 disabled:cursor-not-allowed
-                  flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-4 rounded-xl hover:from-pink-600 hover:to-pink-700 transition-all font-semibold text-lg shadow-lg disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center mt-4"
               >
-                               {" "}
                 {isLoading ? (
-                  <>
-                                       {" "}
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                                           {" "}
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                                           {" "}
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                                         {" "}
-                    </svg>
-                                        Procesando...                  {" "}
-                  </>
-                ) : (
-                  "Confirmar Pedido"
-                )}
-                             {" "}
+                    <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Procesando...
+                    </span>
+                ) : "Confirmar Pedido"}
               </button>
-                         {" "}
             </form>
-                     {" "}
           </div>
-                   {" "}
-          <div className="lg:col-span-1">
-                       {" "}
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-6">
-                           {" "}
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6 font-poppins">
-                Resumen del Pedido
-              </h2>
-                           {" "}
-              <div className="space-y-4 mb-6 max-h-80 overflow-y-auto pr-2">
-                               {" "}
+
+          {/* --- COLUMNA DERECHA: RESUMEN --- */}
+          <div className="order-1 lg:order-2 lg:col-span-1">
+            <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 sticky top-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 font-poppins">Resumen del Pedido</h2>
+              
+              <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                 {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center space-x-4 p-3 border border-gray-100 rounded-lg"
-                  >
-                                       {" "}
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                                       {" "}
+                  <div key={item.id} className="flex items-start space-x-3 p-2 border-b border-gray-50 last:border-0">
+                    <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-md flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                                           {" "}
-                      <h3 className="font-semibold text-gray-800 truncate">
-                        {item.name}
-                      </h3>
-                                           {" "}
-                      <p className="text-pink-600 font-bold">${item.price}</p> 
-                                         {" "}
-                      <p className="text-sm text-gray-500">
-                        Cantidad: {item.quantity}
-                      </p>
-                                         {" "}
+                      <h3 className="text-sm font-medium text-gray-800 truncate">{item.name}</h3>
+                      <div className="flex justify-between items-center mt-1">
+                        <p className="text-xs text-gray-500">x{item.quantity}</p>
+                        <p className="font-bold text-gray-800 text-sm">${(item.price * item.quantity).toFixed(2)}</p>
+                      </div>
                     </div>
-                                       {" "}
-                    <div className="text-right">
-                                           {" "}
-                      <p className="font-bold text-gray-800">
-                                                $
-                        {(item.price * item.quantity).toFixed(2)}               
-                             {" "}
-                      </p>
-                                         {" "}
-                    </div>
-                                     {" "}
                   </div>
                 ))}
-                             {" "}
               </div>
-                            <hr className="my-4 border-gray-200" />             
-                            {/* 🚨 CAMPO PARA CUPÓN */}             {" "}
-              <div className="space-y-3 mb-6">
-                               {" "}
-                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                                   {" "}
-                  <FiDollarSign className="mr-2 text-pink-500" />               
-                    Cupón de Descuento                {" "}
-                </h3>
-                               {" "}
-                <div className="flex space-x-2">
-                                   {" "}
+
+              <hr className="my-4 border-gray-100" />
+
+              {/* SECCIÓN CUPÓN (CORREGIDA PARA MÓVIL) */}
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                    Cupón de Descuento
+                </label>
+                {/* CAMBIO AQUÍ: flex-col en móvil (vertical), sm:flex-row en desktop (horizontal).
+                   El botón ahora ocupa todo el ancho en móvil para que sea fácil de tocar y no se salga.
+                */}
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
-                    value={discountCode}
-                    onChange={handleCouponChange}
-                    placeholder="Ingresa tu cupón"
-                    className="flex-1 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all uppercase"
+                    value={couponCode}
+                    onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setDiscountAmount(0); setError(""); }}
+                    placeholder="CÓDIGO"
+                    className="w-full sm:flex-1 p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-300 uppercase text-sm"
                   />
-
-                  {error && discountAmount === 0 && (
-    <p className="text-sm text-red-600 font-semibold mt-1">
-        {error}
-    </p>
-)}
-
                   <button
                     type="button"
                     onClick={applyCoupon}
-                    disabled={isCouponLoading || discountCode.trim() === ""}
-                    className="bg-pink-500 hover:bg-pink-600 text-white px-5 py-3 rounded-xl transition-colors disabled:opacity-50"
+                    disabled={isCouponLoading || !couponCode.trim()}
+                    className="w-full sm:w-auto bg-gray-800 hover:bg-gray-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
-                    {isCouponLoading ? "Verificando..." : "Aplicar"}
+                    {isCouponLoading ? "..." : "Aplicar"}
                   </button>
-                                 {" "}
                 </div>
-                               {" "}
                 {discountAmount > 0 && (
-                  <p className="text-sm text-green-600 font-semibold mt-1">
-                                        ¡Cupón "{discountCode}" aplicado!
-                    Descuento: -${discountAmount.toFixed(2)}.                  {" "}
-                  </p>
+                    <div className="flex items-center mt-2 text-green-600 bg-green-50 p-2 rounded-lg text-xs font-semibold">
+                        <FiCheckCircle className="mr-1.5" /> Descuento aplicado: -${discountAmount.toFixed(2)}
+                    </div>
                 )}
-                             {" "}
               </div>
-                            {/* 🚨 FIN CAMPO CUPÓN */}             {" "}
-              <div className="space-y-3 mb-6">
-                               {" "}
-                <div className="flex justify-between text-lg">
-                                   {" "}
-                  <span className="text-gray-600">Subtotal de productos:</span> 
-                                 {" "}
-                  <span className="font-semibold">
-                    ${getTotal().toFixed(2)}
-                  </span>
-                                 {" "}
+
+              {/* TOTALES */}
+              <div className="space-y-2 mb-4 text-sm sm:text-base">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal:</span>
+                  <span>${getTotal().toFixed(2)}</span>
                 </div>
-                               {" "}
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-lg text-red-500">
-                                       {" "}
-                    <span className="text-red-500">Descuento de Cupón:</span>   
-                                   {" "}
-                    <span className="font-bold">
-                      -${discountAmount.toFixed(2)}
-                    </span>
-                                     {" "}
+                  <div className="flex justify-between text-green-600 font-medium">
+                    <span>Descuento:</span>
+                    <span>-${discountAmount.toFixed(2)}</span>
                   </div>
                 )}
-                               {" "}
-                <div className="flex justify-between text-lg">
-                                   {" "}
-                  <span className="text-gray-600">Envío:</span>                 {" "}
-                  <span className="font-semibold text-green-600">
-                    A convenir
-                  </span>
-                                 {" "}
+                <div className="flex justify-between text-gray-600">
+                  <span>Envío:</span>
+                  <span className="text-green-600 font-medium">A convenir</span>
                 </div>
-                                <hr className="my-4 border-gray-200" />         
-                     {" "}
-                <div className="flex justify-between text-xl font-bold">
-                                    <span>Total estimado:</span>               
-                   {" "}
-                  <span className="text-pink-600">
-                    ${(getTotal() - discountAmount).toFixed(2)}
-                  </span>
-                                 {" "}
+                <hr className="my-2 border-gray-200" />
+                <div className="flex justify-between text-xl font-bold text-gray-800">
+                  <span>Total:</span>
+                  <span className="text-pink-600">${(getTotal() - discountAmount).toFixed(2)}</span>
                 </div>
-                               {" "}
-                <p className="text-sm text-gray-500 text-right"></p>           
-                 {" "}
               </div>
-                           {" "}
-              <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-                               {" "}
-                <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
-                                   {" "}
-                  <FiCheckCircle className="mr-2 text-green-500" />             
-                      Beneficios de tu compra:                {" "}
-                </h3>
-                               {" "}
-                <ul className="text-sm text-gray-600 space-y-2">
-                                   {" "}
-                  <li className="flex items-center">
-                                       {" "}
-                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-2">
-                                           {" "}
-                      <svg
-                        className="w-3 h-3 text-green-500"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                                               {" "}
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                                             {" "}
-                      </svg>
-                                         {" "}
-                    </div>
-                                        Devoluciones gratuitas por 30 días      
-                               {" "}
-                  </li>
-                                   {" "}
-                  <li className="flex items-center">
-                                       {" "}
-                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-2">
-                                           {" "}
-                      <svg
-                        className="w-3 h-3 text-green-500"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                                               {" "}
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                                             {" "}
-                      </svg>
-                                         {" "}
-                    </div>
-                                        Soporte prioritario 24/7                
-                     {" "}
-                  </li>
-                                 {" "}
-                </ul>
-                             {" "}
+
+              {/* BENEFICIOS */}
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                 <ul className="text-xs text-blue-800 space-y-1.5 font-medium">
+                    <li className="flex items-center">🛡️ Compra protegida</li>
+                    <li className="flex items-center">📞 Contacto directo por WhatsApp</li>
+                 </ul>
               </div>
-                         {" "}
+
             </div>
-                     {" "}
           </div>
-                 {" "}
         </div>
-             {" "}
       </div>
-         {" "}
     </div>
   );
 };

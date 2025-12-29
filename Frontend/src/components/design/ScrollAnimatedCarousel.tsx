@@ -1,23 +1,25 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 
-// Carga diferida del carrusel: no se baja el JS hasta montar
+// Carga diferida del carrusel
+// Asegúrate de que el nombre del archivo importado coincida (ej: './ImageCarousel')
 const LazyImageCarousel = lazy(() => import('./imagenCarousel'));
 
 const WRAPPER_BASE_CLASSES = 'w-full';
 const STICKY_BASE_CLASSES =
   'sticky top-0 w-full overflow-hidden transition-all duration-700 ease-out z-20 md:rounded-3xl border-4 md:border-[6px] border-white';
 
-// 🔧 Ajustá alto/ancho acá
-const HEIGHT_CLASSES = 'h-[500px] md:h-[530px]';
-const WIDTH_CLASSES  = 'w-[92%] mx-auto md:max-w-[650px]';
+// 🔧 AJUSTES OPCIÓN 3: Más grande en PC
+// Aumentamos altura en PC (md:h-[600px]) para dar aire a imágenes verticales
+const HEIGHT_CLASSES = 'h-[500px] md:h-[550px]';
+// Aumentamos ancho máximo en PC (md:max-w-[1000px]) para usar mejor la pantalla
+const WIDTH_CLASSES  = 'w-[92%] mx-auto md:max-w-[500px]';
 
 const ScrollAnimatedCarousel: React.FC = () => {
-  const [hasUserScrolled, setHasUserScrolled] = useState(false); // <- requisito duro
-  const [isVisible, setIsVisible] = useState(false);             // para animar/pausar
-  const [isMounted, setIsMounted] = useState(false);             // para montar el carrusel
+  const [hasUserScrolled, setHasUserScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // 1) Marcamos que el usuario scrolleó (mínimo 1px) y removemos el listener
   useEffect(() => {
     const onScroll = () => {
       if (window.scrollY > 0) {
@@ -26,14 +28,9 @@ const ScrollAnimatedCarousel: React.FC = () => {
       }
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-
-    // Si querés exigir un desplazamiento mayor, cambiá el umbral:
-    // if (window.scrollY > 50) { ... }
-
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // 2) Observamos el contenedor para animar cuando entra en viewport
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
@@ -52,8 +49,6 @@ const ScrollAnimatedCarousel: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // 3) Montamos el carrusel SOLO cuando: el usuario scrolleó
-  //    (si además querés exigir visibilidad, agregá && isVisible)
   useEffect(() => {
     if (hasUserScrolled) {
       setIsMounted(true);
@@ -75,7 +70,6 @@ const ScrollAnimatedCarousel: React.FC = () => {
             : 'none',
         }}
       >
-        {/* ⛔ Nada se carga/renderiza hasta que el usuario scrollee */}
         {isMounted ? (
           <Suspense fallback={null}>
             <LazyImageCarousel pausedExternal={!isVisible} />

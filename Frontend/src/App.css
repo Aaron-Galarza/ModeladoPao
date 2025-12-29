@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@300..700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
 @tailwind base;
 @tailwind components;
 
@@ -22,15 +22,7 @@ body {
   background: rgb(240, 236, 238)
 ;
 }
-/* FONDO GENERAL PARA TODA LA APLICACIÓN */
 
-
-/* Si quieres que solo CatalogPage tenga el fondo, elimina lo anterior y usa esto: */
-
-
-
-
-/* Elimina cualquier margen o padding por defecto */
 * {
   box-sizing: border-box;
 }
@@ -39,6 +31,7 @@ body {
   --font-logo: 'Pacifico', cursive;
   --font-nav: 'Quicksand', sans-serif;
   --font-mobile-nav: 'Lora', serif;
+--font-cursiv: 'Dancing Script', cursive;
   --pastel-pink: #F8C8DC; 
   --pastel-pink2:#f29ab7;
   --text-color: #333;

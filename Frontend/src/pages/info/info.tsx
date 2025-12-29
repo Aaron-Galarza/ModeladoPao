@@ -13,37 +13,7 @@ const content = {
     secondaryCtaLabel: "Contactame",
     secondaryCtaHref: "https://wa.me/543624088244",
   },
-  features: [
-    {
-      title: "Material de calidad",
-      desc: "Selecciono cada insumo para mantener un estándar alto y constante.",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-6 h-6" stroke="currentColor" fill="none" strokeWidth="1.8">
-          <path d="M12 3l8 6-8 6-8-6 8-6z" />
-          <path d="M4 15l8 6 8-6" />
-        </svg>
-      ),
-    },
-    {
-      title: "Precios justos",
-      desc: "Precios justos basados en la calidad del producto y horas de trabajo.",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-6 h-6" stroke="currentColor" fill="none" strokeWidth="1.8">
-          <path d="M3 10h18M3 14h18" />
-          <path d="M7 6h10M7 18h10" />
-        </svg>
-      ),
-    },
-    {
-      title: "Atención cercana",
-      desc: "Busco un trato simple, directo y amable para mejorar la experiencia del cliente.",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-6 h-6" stroke="currentColor" fill="none" strokeWidth="1.8">
-          <path d="M21 15a4 4 0 01-4 4H7l-4 4V7a4 4 0 014-4h10a4 4 0 014 4v8z" />
-        </svg>
-      ),
-    },
-  ],
+  // Sección features eliminada de aquí
   highlight: {
     badge: "Promesa",
     title: "Siempre bello. Siempre calidad",
@@ -63,7 +33,7 @@ const content = {
   ],
   cta: {
     title: "¿Listo para pedir?",
-    desc: "Hacé tu pedido online en segundos o escribinos por WhatsApp si tenés dudas.",
+    desc: "Hacé tu pedido online en segundos o escribime por WhatsApp si tenés dudas.",
     primaryLabel: "Ver catálogo",
     primaryHref: "/catalogo",
     secondaryLabel: "WhatsApp",
@@ -142,21 +112,7 @@ const Info: React.FC = () => {
         </div>
       </Section>
 
-      {/* FEATURES (verde intacto) */}
-      <Section className="py-6">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {content.features.map((f, i) => (
-            <div key={i} className="p-5 rounded-xl bg-white border border-gray-200 shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center mb-3">
-                {f.icon}
-              </div>
-              {/* ÚNICO CAMBIO: font-cursive en el título */}
-              <h3 className="text-lg font-semibold text-gray-900 font-cursive">{f.title}</h3>
-              <p className="text-gray-600 mt-1">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
+      {/* SECCIÓN FEATURES ELIMINADA DE AQUÍ */}
 
       {/* HIGHLIGHT */}
       <Section className="py-8">

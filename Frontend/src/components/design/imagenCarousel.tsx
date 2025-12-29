@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-import Kity from '../../assets/images/kity.jpeg';
-import Hada from '../../assets/images/hada.jpeg';
-import Sirenita from '../../assets/images/pokemon.jpeg';
+// Asegúrate de que estas rutas sean correctas en tu proyecto
+import Kity from '../../assets/images/1.webp';
+import Hada from '../../assets/images/2.webp';
+import Sirenita from '../../assets/images/3.webp';
 
 // Slides con una sola imagen
 const images = [
-  { src: Kity, },
-  { src: Hada,  },
+  { src: Kity },
+  { src: Hada },
   { src: Sirenita },
 ];
 
@@ -112,9 +113,7 @@ const ImageCarousel: React.FC<Props> = ({ pausedExternal = false }) => {
   return (
     <div
       className={`
-        relative w-full mx-auto
-        h-[500px] md:h-[530px]
-        md:max-w-[650px]
+        relative w-full h-full mx-auto
         overflow-hidden bg-black transition-all duration-1000
         ${carouselLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
       `}
@@ -123,11 +122,7 @@ const ImageCarousel: React.FC<Props> = ({ pausedExternal = false }) => {
       onTouchEnd={handleTouchEnd}
       aria-roledescription="carousel"
       style={{
-        boxShadow: `
-          0 2px 8px rgba(0,0,0,0.25),
-          0 4px 12px rgba(0,0,0,0.25),
-          inset 0 0 0 1px rgba(255,255,255,0.05)
-        `,
+        // Dejamos que el padre maneje el borde exterior, o mantenemos este si prefieres
         borderRadius: '12px',
       }}
     >
@@ -148,12 +143,14 @@ const ImageCarousel: React.FC<Props> = ({ pausedExternal = false }) => {
               loading="lazy"
               draggable={false}
               className={`
-                w-full h-full ${image|| 'object-cover'} block transition-transform duration-1000
+                w-full h-full block transition-transform duration-1000
+                /* 👇 AQUÍ ESTÁ LA MAGIA DE LA OPCIÓN 3 */
+                object-cover md:object-fill
+                bg-gray-900 
                 ${index === currentImageIndex ? 'scale-100' : 'scale-110'}
               `}
               style={{ borderRadius: '12px' }}
             />
-            {/* 👇 Overlay y textos eliminados completamente */}
           </div>
         ))}
       </div>

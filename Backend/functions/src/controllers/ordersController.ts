@@ -1,12 +1,26 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
+// Inicialización de Admin SDK
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const cors = require('cors'); 
 const corsHandler = cors({ origin: true });
 
+// --- INTERFACES ---
+interface IUpdateOrderStatusData {
+    orderId: string;
+    newStatus: string;
+}
+
+// --- FUNCIÓN 1: CREAR PEDIDO ---
 export const crearPedido = functions.https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         
+        // 1. Validar el método de la solicitud
         if (req.method !== "POST") {
             res.status(405).send("Método no permitido. Usa POST.");
             return;
@@ -21,10 +35,11 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
             shippingAddress, 
             paymentMethod, 
             notes,
-            discountCode 
+            discountCode,
+            couponCode 
         } = req.body;
 
-        // 1. Validación de campos obligatorios
+        // 2. Validar campos obligatorios
         if (!products || products.length === 0 || !guestEmail || !guestPhone || !guestName || !deliveryType || !paymentMethod) {
             res.status(400).send("Error: Faltan campos obligatorios.");
             return;
@@ -33,15 +48,13 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
         const db = admin.firestore();
 
         try {
-            // ----------------------------------------------------
-            // 🚀 INICIO DE LA TRANSACCIÓN DE STOCK
-            // ----------------------------------------------------
+            // 🚀 INICIO DE LA TRANSACCIÓN (Stock + Descuento + Creación)
             const result = await db.runTransaction(async (transaction) => {
                 let subtotalAmount = 0;
                 const productsForOrder = [];
                 const stockUpdates: { ref: admin.firestore.DocumentReference, nuevoStock: number }[] = [];
 
-                // Validamos cada producto y su stock
+                // A. Validar cada producto, su precio y su STOCK
                 for (const item of products) {
                     const productoRef = db.collection("Productos").doc(item.idProducto);
                     const productoDoc = await transaction.get(productoRef);
@@ -54,10 +67,10 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
                     
                     // Lógica de validación de stock
                     if (data.isStockeable === true) {
-                        if (data.stock < item.quantity) {
+                        if (typeof data.stock !== 'number' || data.stock < item.quantity) {
                             throw new Error(`STOCK_INSUFICIENTE:${data.nombre}`);
                         }
-                        // Preparamos la actualización para después
+                        // Preparamos la actualización para el final de la transacción
                         stockUpdates.push({ 
                             ref: productoRef, 
                             nuevoStock: data.stock - item.quantity 
@@ -75,29 +88,26 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
                     });
                 }
 
-                // Si llegamos aquí, hay stock de TODO. Procedemos a descontar.
-                stockUpdates.forEach(update => {
-                    transaction.update(update.ref, { stock: update.nuevoStock });
-                });
-
-                // --- Lógica de Descuento (Integrada) ---
+                // B. Lógica de Descuento
                 let finalAmount = subtotalAmount;
                 let discountApplied = 0;
                 let usedDiscountCode = null;
 
-                if (discountCode) {
-                    const codeToSearch = String(discountCode).toUpperCase();
-                    const discountDoc = await transaction.get(db.collection('Descuentos').doc(codeToSearch));
+                const codeToProcess = discountCode || couponCode;
+                if (codeToProcess) {
+                    const codeToSearch = String(codeToProcess).toUpperCase();
+                    const discountRef = db.collection('Descuentos').doc(codeToSearch);
+                    const discountDoc = await transaction.get(discountRef);
 
                     if (discountDoc.exists) {
-                        const discData = discountDoc.data()!;
-                        const isExpired = discData.expiresAt && discData.expiresAt.toDate() < new Date();
+                        const disc = discountDoc.data()!;
+                        const isExpired = disc.expiresAt && disc.expiresAt.toDate() < new Date();
                         
-                        if (discData.isActive && !isExpired) {
-                            if (discData.type === 'percentage') {
-                                discountApplied = subtotalAmount * (discData.value / 100);
-                            } else {
-                                discountApplied = discData.value;
+                        if (disc.isActive && !isExpired) {
+                            if (disc.type === 'percentage') {
+                                discountApplied = subtotalAmount * (disc.value / 100);
+                            } else if (disc.type === 'fixed') {
+                                discountApplied = disc.value;
                             }
                             finalAmount = Math.max(0, subtotalAmount - discountApplied);
                             usedDiscountCode = codeToSearch;
@@ -105,18 +115,22 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
                     }
                 }
 
-                // Creamos el ID del nuevo pedido
+                // C. Ejecutar actualizaciones de stock (dentro de la transacción)
+                stockUpdates.forEach(update => {
+                    transaction.update(update.ref, { stock: update.nuevoStock });
+                });
+
+                // D. Crear el documento del Pedido
                 const newOrderRef = db.collection("Pedidos").doc();
-                
                 const orderData = {
                     guestEmail,
                     guestPhone,
                     guestName,
                     products: productsForOrder,
-                    subtotalAmount,
-                    discountApplied,
-                    usedDiscountCode,
-                    totalAmount: finalAmount,
+                    subtotalAmount, 
+                    couponCode: usedDiscountCode,   
+                    discountAmount: discountApplied, 
+                    totalAmount: finalAmount, 
                     deliveryType,
                     shippingAddress: deliveryType === 'delivery' ? shippingAddress : null, 
                     paymentMethod,
@@ -125,13 +139,12 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
                     createdAt: admin.firestore.FieldValue.serverTimestamp(), 
                 };
 
-                // Guardamos el pedido dentro de la misma transacción
                 transaction.set(newOrderRef, orderData);
 
                 return { id: newOrderRef.id, totalAmount: finalAmount };
             });
 
-            // Si la transacción termina con éxito
+            // Respuesta exitosa
             res.status(201).send({ 
                 message: "Pedido creado exitosamente con stock actualizado.", 
                 ...result 
@@ -140,35 +153,38 @@ export const crearPedido = functions.https.onRequest(async (req, res) => {
         } catch (error: any) {
             console.error("❌ Error en crearPedido:", error.message);
 
-            // Manejo de errores específicos para el cliente
+            // Manejo de errores específicos
             if (error.message.startsWith("STOCK_INSUFICIENTE:")) {
                 const nombreProd = error.message.split(":")[1];
-                res.status(409).send({ error: "stock-error", message: `No hay stock suficiente de: ${nombreProd}` });
+                res.status(409).send({ 
+                    error: "stock-error", 
+                    message: `No hay stock suficiente de: ${nombreProd}` 
+                });
             } 
             else if (error.message.startsWith("PRODUCTO_NO_EXISTE:")) {
-                res.status(404).send({ error: "not-found", message: "Uno de los productos ya no existe." });
+                res.status(404).send({ 
+                    error: "not-found", 
+                    message: "Uno de los productos ya no existe en la base de datos." 
+                });
             } 
             else {
-                res.status(500).send({ error: "internal", message: "Error al procesar el pedido." });
+                res.status(500).send({ 
+                    error: "internal", 
+                    message: "Error interno al procesar el pedido." 
+                });
             }
         }
     });
 });
 
-
-// Define la interfaz para los datos de la solicitud
-interface IUpdateOrderStatusData {
-    orderId: string;
-    newStatus: string;
-}
-
-// Función para actualizar el estado de un pedido (sin cambios)
+// --- FUNCIÓN 2: ACTUALIZAR ESTADO DEL PEDIDO ---
 export const updateOrderStatus = functions.https.onCall(async (request: functions.https.CallableRequest<IUpdateOrderStatusData>) => {
     try {
         const db = admin.firestore();
 
+        // Validar permisos de administrador
         if (!request.auth || !request.auth.token.admin) {
-            throw new functions.https.HttpsError('permission-denied', 'Solo los administradores pueden actualizar el estado de los pedidos.');
+            throw new functions.https.HttpsError('permission-denied', 'Solo los administradores pueden realizar esta acción.');
         }
 
         const { orderId, newStatus } = request.data;

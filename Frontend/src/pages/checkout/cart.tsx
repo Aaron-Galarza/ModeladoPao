@@ -1,12 +1,10 @@
 import React, { useLayoutEffect } from 'react';
-import { FiArrowLeft, FiPlus, FiMinus, FiX, FiShoppingCart, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiMinus,  FiShoppingCart, FiTrash2 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../../components/checkout/cartStore';
 
-// Define el límite de cantidad por producto
-const MAX_QUANTITY_PER_ITEM = 50;
+const MAX_QUANTITY_PER_ITEM = 1;
 
-// La interfaz no necesita la propiedad 'stock'
 interface CartItem {
   id: string;
   name: string;
@@ -25,8 +23,6 @@ const CartPage: React.FC = () => {
     getItemCount 
   } = useCartStore();
 
-  // Usa useLayoutEffect para asegurar que el estado se actualice
-  // justo antes de que el componente sea pintado en la pantalla
   useLayoutEffect(() => {
     useCartStore.getState(); 
   }, []);
@@ -37,41 +33,26 @@ const CartPage: React.FC = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: 'rgb(240, 236, 238)' }}>
-        <div className="absolute inset-0" style={{ backgroundColor: 'rgb(240, 236, 238)' }} />
-        
-        <div className="relative z-10 container mx-auto max-w-4xl py-12 px-4 min-h-screen flex flex-col">
-          <div className="flex items-center mb-8">
-            <Link 
-              to="/catalogo" 
-              className="flex items-center text-pink-600 hover:text-pink-700 transition-colors font-semibold"
-            >
-              <FiArrowLeft className="mr-2" />
-              Volver al Catálogo
-            </Link>
-          </div>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center transform hover:scale-[1.01] transition-transform duration-200 w-full max-w-md">
+      <div className="min-h-screen bg-[#f0ecee]">
+        <div className="container mx-auto max-w-4xl py-12 px-4 min-h-screen flex flex-col justify-center items-center">
+            <div className="bg-white rounded-2xl shadow-xl p-8 text-center w-full max-w-md transform hover:scale-105 transition-transform duration-300">
               <div className="flex justify-center mb-6">
-                <div className="w-24 h-24 bg-pink-100 rounded-full flex items-center justify-center">
-                  <FiShoppingCart className="w-12 h-12 text-pink-500" />
+                <div className="w-24 h-24 bg-pink-50 rounded-full flex items-center justify-center">
+                  <FiShoppingCart className="w-10 h-10 text-pink-500" />
                 </div>
               </div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-4 font-poppins">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2 font-poppins">
                 Tu carrito está vacío
               </h2>
-              <p className="text-gray-600 mb-8 text-lg">
-                ¡Explora nuestro catálogo y encuentra algo especial!
+              <p className="text-gray-500 mb-8">
+                ¡Elige algo lindo de nuestro catálogo!
               </p>
               <Link
                 to="/catalogo"
-                className="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-8 py-4 rounded-xl 
-                           hover:from-pink-600 hover:to-pink-700 transition-all duration-300 
-                           font-semibold text-lg shadow-lg hover:shadow-xl inline-block"
+                className="block w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
               >
-                Descubrir Productos
+                Ir a comprar
               </Link>
-            </div>
             </div>
         </div>
       </div>
@@ -79,109 +60,98 @@ const CartPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'rgb(240, 236, 238)' }}>
-      <div className="absolute inset-0" style={{ backgroundColor: 'rgb(240, 236, 238)' }} />
-      
-      <div className="relative z-10 container mx-auto max-w-6xl py-12 px-4 min-h-screen">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+    <div className="min-h-screen bg-[#f0ecee] py-8 px-4 sm:px-6">
+      <div className="container mx-auto max-w-6xl">
+        {/* Header Carrito */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <Link 
             to="/catalogo" 
-            className="flex items-center text-pink-600 hover:text-pink-700 transition-colors font-semibold"
+            className="flex items-center text-pink-600 hover:text-pink-700 transition-colors font-medium text-sm sm:text-base"
           >
             <FiArrowLeft className="mr-2" />
             Seguir Comprando
           </Link>
           
-          <div className="text-center sm:text-right">
-            <h1 className="text-4xl font-bold text-gray-800 flex items-center justify-center sm:justify-end font-poppins">
-              <FiShoppingCart className="mr-3 text-pink-500" />
-              Mi Carrito
-            </h1>
-            <p className="text-gray-600 mt-2">
-              {getItemCount()} {getItemCount() === 1 ? 'producto' : 'productos'}
-            </p>
+          <div className="flex items-baseline gap-2">
+             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 font-poppins">
+               Mi Carrito
+             </h1>
+             <span className="text-gray-500 text-sm">
+               ({getItemCount()} items)
+             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-gray-800 font-poppins">
-                  Productos seleccionados
-                </h2>
-                <button
-                  onClick={clearCart}
-                  className="flex items-center text-red-500 hover:text-red-700 transition-colors font-semibold"
-                >
-                  <FiTrash2 className="mr-2" />
-                  Vaciar Carrito
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <CartItemComponent
-                    key={item.id}
-                    item={item}
-                    onUpdateQuantity={updateQuantity}
-                    onRemove={removeItem}
-                    calculateTotal={calculateItemTotal}
-                  />
-                ))}
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          {/* Lista de Productos */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
+               <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
+                 <h2 className="text-lg font-semibold text-gray-700">Productos</h2>
+                 <button
+                   onClick={clearCart}
+                   className="text-xs sm:text-sm text-red-500 hover:text-red-700 flex items-center font-medium"
+                 >
+                   <FiTrash2 className="mr-1" /> Vaciar
+                 </button>
+               </div>
+               
+               <div className="space-y-4">
+                 {items.map((item) => (
+                   <CartItemComponent
+                     key={item.id}
+                     item={item}
+                     onUpdateQuantity={updateQuantity}
+                     onRemove={removeItem}
+                     calculateTotal={calculateItemTotal}
+                   />
+                 ))}
+               </div>
             </div>
           </div>
 
+          {/* Resumen Lateral */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-6">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6 font-poppins">
-                Resumen de compra
+            <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 sticky top-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-6 font-poppins border-b border-gray-100 pb-4">
+                Resumen
               </h2>
               
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between text-lg">
-                  <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-semibold">${getTotal().toFixed(2)}</span>
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span className="font-medium">${getTotal().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Envío</span>
+                  <span className="text-green-600 font-medium text-sm">A convenir</span>
                 </div>
                 
-                <div className="flex justify-between text-lg">
-                  <span className="text-gray-600">Envío:</span>
-                  <span className="font-semibold text-green-600">A convenir</span>
-                </div>
-
-                <hr className="my-4 border-gray-200" />
-                
-                <div className="flex justify-between text-xl font-bold">
-                  <span>Total:</span>
+                <div className="flex justify-between text-2xl font-bold text-gray-800 pt-4 mt-2 border-t border-gray-100">
+                  <span>Total</span>
                   <span className="text-pink-600">${getTotal().toFixed(2)}</span>
                 </div>
               </div>
+
               <Link
                 to="/checkout"
-                className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-4 
-                          rounded-xl hover:from-pink-600 hover:to-pink-700 transition-all duration-300 
-                          font-semibold text-lg shadow-lg hover:shadow-xl flex items-center justify-center"
+                className="w-full bg-pink-600 text-white py-4 rounded-xl hover:bg-pink-700 transition-colors font-bold text-lg shadow-md flex items-center justify-center gap-2"
               >
-                Proceder al Pago
-                <FiArrowLeft className="ml-2 transform rotate-180" />
+                Finalizar Compra <FiArrowLeft className="transform rotate-180" />
               </Link>
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-gray-800 mb-2">✅ Beneficios:</h3>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Devoluciones gratuitas por 30 días</li>
-                  <li>• Soporte prioritario 24/7</li>
-                </ul>
-              </div>
+              
+              <p className="text-xs text-center text-gray-400 mt-4">
+                 Transacciones seguras y encriptadas
+              </p>
             </div>
           </div>
         </div>
-        <div className="h-8"></div>
       </div>
     </div>
   );
 };
 
+// --- COMPONENTE DE ITEM MEJORADO PARA MÓVIL ---
 interface CartItemProps {
   item: CartItem;
   onUpdateQuantity: (id: string, quantity: number) => void;
@@ -196,56 +166,64 @@ const CartItemComponent: React.FC<CartItemProps> = ({
   calculateTotal 
 }) => {
   return (
-    <div className="flex items-center space-x-4 p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow">
-      <img
-        src={item.image}
-        alt={item.name}
-        className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg"
-      />
-      
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-gray-800 text-sm sm:text-base truncate">
-          {item.name}
-        </h3>
-        <p className="text-pink-600 font-bold text-lg">${item.price}</p>
-        
-        <div className="flex items-center space-x-3 mt-3">
-          <button
-            onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-            disabled={item.quantity <= 1}
-            className="p-2 rounded-full border border-gray-200 hover:bg-gray-50 
-                       disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <FiMinus className="w-3 h-3 sm:w-4 sm:h-4" />
-          </button>
-          
-          <span className="w-8 text-center font-semibold text-gray-800">
-            {item.quantity}
-          </span>
-          
-          <button
-            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-            disabled={item.quantity >= MAX_QUANTITY_PER_ITEM}
-            className="p-2 rounded-full border border-gray-200 hover:bg-gray-50 
-                       disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <FiPlus className="w-3 h-3 sm:w-4 sm:h-4" />
-          </button>
-        </div>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 border border-gray-100 rounded-xl hover:border-pink-100 transition-colors bg-white">
+      {/* Imagen + Info Básica (Siempre en fila) */}
+      <div className="flex items-center gap-4 w-full sm:w-auto flex-1">
+          <img
+            src={item.image}
+            alt={item.name}
+            className="w-20 h-20 object-cover rounded-lg border border-gray-100 flex-shrink-0"
+          />
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-gray-800 text-base leading-tight mb-1 line-clamp-2">
+              {item.name}
+            </h3>
+            <p className="text-pink-600 font-bold text-lg">
+                ${item.price}
+            </p>
+          </div>
       </div>
-      
-      <div className="text-right">
-        <p className="font-bold text-lg text-gray-800">
-          ${calculateTotal(item.price, item.quantity).toFixed(2)}
-        </p>
-        
-        <button
-          onClick={() => onRemove(item.id)}
-          className="mt-2 text-red-500 hover:text-red-700 transition-colors text-sm"
-        >
-          <FiX className="w-4 h-4 inline mr-1" />
-          Eliminar
-        </button>
+
+      {/* Controles + Subtotal + Eliminar (Abajo en móvil, Derecha en Desktop) */}
+      <div className="flex items-center justify-between w-full sm:w-auto gap-4 mt-2 sm:mt-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-50">
+          
+          {/* Selector de Cantidad */}
+          <div className="flex items-center bg-gray-50 rounded-lg p-1">
+            <button
+              onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+              disabled={item.quantity <= 1}
+              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white shadow-sm disabled:opacity-30 disabled:shadow-none transition-all text-gray-600"
+            >
+              <FiMinus size={14} />
+            </button>
+            <span className="w-8 text-center font-semibold text-gray-800 text-sm">
+              {item.quantity}
+            </span>
+            <button
+              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+              disabled={item.quantity >= MAX_QUANTITY_PER_ITEM}
+              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white shadow-sm disabled:opacity-30 disabled:shadow-none transition-all text-gray-600"
+            >
+              <FiPlus size={14} />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4 sm:flex-col sm:items-end sm:gap-1">
+             <div className="text-right">
+                <span className="block text-xs text-gray-400 sm:hidden">Total:</span>
+                <p className="font-bold text-lg text-gray-800">
+                    ${calculateTotal(item.price, item.quantity).toFixed(2)}
+                </p>
+             </div>
+             
+             <button
+                onClick={() => onRemove(item.id)}
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
+                title="Eliminar producto"
+             >
+                <FiTrash2 size={18} />
+             </button>
+          </div>
       </div>
     </div>
   );

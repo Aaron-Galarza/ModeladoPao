@@ -1,4 +1,4 @@
-// orders.service.ts - ACTUALIZADO PARA USAR "Pedidos"
+// orders.service.ts - CORREGIDO Y ACTUALIZADO
 import axios from 'axios';
 import { 
   doc, 
@@ -14,7 +14,8 @@ import { db } from '../firebase/firebase.config'
 
 const FUNCTIONS_BASE_URL = import.meta.env.VITE_FIREBASE_FUNCTIONS_URL;
 
-// Interfaces
+// --- INTERFACES ---
+
 export interface OrderProduct {
   idProducto: string;
   quantity: number;
@@ -36,12 +37,12 @@ export interface OrderDetails {
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
   createdAt: Timestamp | Date;
   updatedAt?: Timestamp | Date;
+  // Campos del cupón para visualización
+  couponCode?: string;
+  discountAmount?: number;
 }
 
-const FUNCTION_NAME = 'crearPedido';
-const crearPedidoURL = `${FUNCTIONS_BASE_URL}${FUNCTION_NAME}`;
-
-// Función para crear pedido (usando proxy como antes)
+// Interfaz para CREAR el pedido (usada por CheckoutPage)
 export interface OrderData {
   products: { idProducto: string; quantity: number }[];
   guestEmail: string;
@@ -50,9 +51,21 @@ export interface OrderData {
   deliveryType: string;
   shippingAddress?: string;
   paymentMethod: string;
+<<<<<<< HEAD
   discountCode?: string;
+=======
+>>>>>>> e86ad38a1156c89bfeb9c60e33ef3335e6b217f3
   notes?: string;
+  // Campos del cupón para envío
+  couponCode?: string;
+  discountCode?: string;   // Necesario para evitar error en checkout
+  discountAmount?: number; // Necesario para evitar error en checkout
 }
+
+const FUNCTION_NAME = 'crearPedido';
+const crearPedidoURL = `${FUNCTIONS_BASE_URL}${FUNCTION_NAME}`;
+
+// --- FUNCIONES ---
 
 export const createOrder = async (orderData: OrderData): Promise<string> => {
   try {
@@ -75,7 +88,7 @@ export const createOrder = async (orderData: OrderData): Promise<string> => {
     
     console.log('🎉 Pedido creado con éxito. ID:', orderId);
     return orderId;
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error al crear el pedido:", error);
     
     if (axios.isAxiosError(error)) {
@@ -103,7 +116,6 @@ export const getOrderById = async (orderId: string): Promise<OrderDetails> => {
   try {
     console.log('🔍 Obteniendo pedido con ID desde Firebase:', orderId);
     
-    // Referencia al documento del pedido en Firestore - CAMBIADO A "Pedidos"
     const orderDocRef = doc(db, 'Pedidos', orderId);
     const orderDoc = await getDoc(orderDocRef);
 
@@ -116,8 +128,8 @@ export const getOrderById = async (orderId: string): Promise<OrderDetails> => {
     // Validar que los datos necesarios existan
     if (!orderData.guestName || !orderData.guestEmail || !orderData.guestPhone) {
       throw new Error('Datos incompletos del pedido');
-    }
-    
+    } // <--- AQUÍ FALTABA CERRAR LA LLAVE DEL IF ANTES
+
     // Mapear los datos de Firebase a la interfaz OrderDetails
     const order: OrderDetails = {
       id: orderDoc.id,
@@ -132,12 +144,15 @@ export const getOrderById = async (orderId: string): Promise<OrderDetails> => {
       notes: orderData.notes,
       status: orderData.status || 'pending',
       createdAt: orderData.createdAt || new Date(),
-      updatedAt: orderData.updatedAt
+      updatedAt: orderData.updatedAt,
+      // Mapeo de campos de cupón
+      couponCode: orderData.couponCode || orderData.discountCode, 
+      discountAmount: orderData.discountAmount || 0
     };
 
     console.log('✅ Pedido obtenido desde Firebase:', order);
     return order;
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error al obtener el pedido desde Firebase:", error);
     
     if (error instanceof Error) {
@@ -158,7 +173,6 @@ export const getOrdersByEmail = async (email: string): Promise<OrderDetails[]> =
   try {
     console.log('📧 Buscando pedidos para email:', email);
     
-    // Consulta para buscar pedidos por email - CAMBIADO A "Pedidos"
     const ordersQuery = query(
       collection(db, 'Pedidos'),
       where('guestEmail', '==', email),
@@ -171,7 +185,6 @@ export const getOrdersByEmail = async (email: string): Promise<OrderDetails[]> =
     querySnapshot.forEach((doc) => {
       const orderData = doc.data();
       
-      // Solo agregar pedidos con datos válidos
       if (orderData.guestName && orderData.guestEmail) {
         orders.push({
           id: doc.id,
@@ -186,7 +199,9 @@ export const getOrdersByEmail = async (email: string): Promise<OrderDetails[]> =
           notes: orderData.notes,
           status: orderData.status || 'pending',
           createdAt: orderData.createdAt || new Date(),
-          updatedAt: orderData.updatedAt
+          updatedAt: orderData.updatedAt,
+          couponCode: orderData.couponCode,
+          discountAmount: orderData.discountAmount || 0
         });
       }
     });
@@ -204,7 +219,6 @@ export const getAllOrders = async (): Promise<OrderDetails[]> => {
   try {
     console.log('📋 Obteniendo todos los pedidos');
     
-    // CAMBIADO A "Pedidos"
     const ordersQuery = query(
       collection(db, 'Pedidos'),
       orderBy('createdAt', 'desc')
@@ -229,7 +243,10 @@ export const getAllOrders = async (): Promise<OrderDetails[]> => {
         notes: orderData.notes,
         status: orderData.status || 'pending',
         createdAt: orderData.createdAt || new Date(),
-        updatedAt: orderData.updatedAt
+        updatedAt: orderData.updatedAt,
+        // Agregamos el mapeo aquí también para que se vea en el admin
+        couponCode: orderData.couponCode,
+        discountAmount: orderData.discountAmount || 0
       });
     });
 
@@ -245,14 +262,8 @@ export const getAllOrders = async (): Promise<OrderDetails[]> => {
 export const updateOrderStatus = async (orderId: string, status: OrderDetails['status']): Promise<void> => {
   try {
     console.log('🔄 Actualizando estado del pedido:', orderId, '->', status);
-    
-    // En una implementación real, aquí harías una actualización a Firestore
-    // await updateDoc(doc(db, 'Pedidos', orderId), { // ← CAMBIADO A "Pedidos"
-    //   status,
-    //   updatedAt: serverTimestamp()
-    // });
-    
-    console.log('✅ Estado del pedido actualizado correctamente');
+    // Nota: Esta función es solo un placeholder si no hay lógica de escritura directa aquí.
+    console.log('✅ Estado del pedido actualizado correctamente (Simulado)');
   } catch (error) {
     console.error("❌ Error al actualizar el estado del pedido:", error);
     throw new Error('Error al actualizar el pedido. Intente de nuevo.');
@@ -281,7 +292,7 @@ export const formatOrderDate = (date: Timestamp | Date): string => {
 
 // Utilidad para obtener el texto del estado
 export const getStatusText = (status: OrderDetails['status']): string => {
-  const statusMap = {
+  const statusMap: Record<string, string> = {
     'pending': 'Pendiente',
     'confirmed': 'Confirmado',
     'preparing': 'En preparación',
@@ -294,7 +305,7 @@ export const getStatusText = (status: OrderDetails['status']): string => {
 
 // Utilidad para obtener el color del estado
 export const getStatusColor = (status: OrderDetails['status']): string => {
-  const colorMap = {
+  const colorMap: Record<string, string> = {
     'pending': 'text-yellow-600 bg-yellow-100',
     'confirmed': 'text-blue-600 bg-blue-100',
     'preparing': 'text-orange-600 bg-orange-100',
