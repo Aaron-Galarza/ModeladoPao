@@ -1,65 +1,59 @@
 import React from 'react';
 import { useCartStore } from '../../components/checkout/cartStore'; 
 
-// Props del componente. No se incluye el stock en las props.
 interface ProductCardProps {
-    id: string; // <-- ID del producto, necesario para el carrito
+    id: string;
     nombre: string;
     precio: number;
     descripcionCorta: string;
-    imagenURL: string; // <-- Cambiado de 'imagen' a 'imagenURL'
-    
+    imagenURL: string;
+    stock?: number;
+    isStockeable?: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ id, nombre, precio, descripcionCorta, imagenURL }) => { // <-- Aquí también
-    // Obtenemos la función addItem y openCart de tu store de Zustand
+const ProductCard: React.FC<ProductCardProps> = ({ id, nombre, precio, descripcionCorta, imagenURL, stock, isStockeable }) => {
     const addItem = useCartStore(state => state.addItem);
     const openCart = useCartStore(state => state.openCart);
 
-    // Lógica para manejar el clic en el botón
+    // Lógica de bloqueo
+    const isOutOfStock = isStockeable === true && (stock ?? 0) <= 0;
+
     const handleAddToCart = () => {
-        // Creamos un objeto con las propiedades que la función addItem necesita
-        const productToAdd = {
-            id,
-            name: nombre,
-            price: precio,
-            image: imagenURL, // <-- Usamos imagenURL aquí
-        };
-        
-        addItem(productToAdd);
-        openCart(); // Abrimos el carrito al añadir un producto
-        console.log(`Producto "${nombre}" añadido al carrito.`);
+        if (isOutOfStock) return;
+        addItem({ id, name: nombre, price: precio, image: imagenURL });
+        openCart();
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-xl group">
-            {/* Imagen del producto */}
-            <img
-                src={imagenURL} // <-- Usamos imagenURL aquí
-                alt={nombre}
-                className="w-full h-68 object-cover object-center"
-            />
+        <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 group ${isOutOfStock ? 'opacity-75' : 'hover:scale-105 hover:shadow-xl'}`}>
             
-            {/* Contenido de la tarjeta */}
+            {/* Cartel Sin Stock */}
+            {isOutOfStock && (
+                <div className="absolute top-4 right-4 z-10">
+                    <span className="bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase shadow-md">
+                        Sin Stock
+                    </span>
+                </div>
+            )}
+
+            <div className={`h-64 overflow-hidden ${isOutOfStock ? 'grayscale' : ''}`}>
+                <img src={imagenURL} alt={nombre} className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110" />
+            </div>
+            
             <div className="p-4 flex flex-col items-center text-center">
-                {/* Nombre del producto */}
-                <h3 className="text-xl font-poppins font-semibold text-gray-800 mb-1">{nombre}</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">{nombre}</h3>
+                <p className="text-xs text-gray-500 italic mb-2 line-clamp-2">{descripcionCorta}</p>
+                <p className="text-xl font-bold text-gray-800 mb-4">${precio.toFixed(2)}</p>
                 
-                {/* Descripción corta */}
-                <p className="text-sm text-gray-600 font-poppins italic mb-3 opacity-85">{descripcionCorta}</p>
-                
-                {/* Precio */}
-                <p className="text-xl font-bold text-gray-800 font-poppins mb-4">${precio.toFixed(2)}</p>
-                
-                {/* Botón "Agregar al carrito" */}
                 <button 
                     onClick={handleAddToCart}
-                    className="w-full py-1 rounded-lg text-lg font-bold font-poppins transition-all duration-300 
-                                 bg-[var(--link-hover)] text-white 
-                                 hover:bg-[var(--pastel-menta)] hover:text-gray-800 
-                                 shadow-md group-hover:shadow-lg filter drop-shadow-sm" 
+                    disabled={isOutOfStock}
+                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all duration-300 shadow-md
+                        ${isOutOfStock 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                            : 'bg-[var(--link-hover)] text-white hover:bg-[var(--pastel-menta)] hover:text-gray-800'}`}
                 >
-                    Agregar al carrito
+                    {isOutOfStock ? 'AGOTADO' : 'AGREGAR AL CARRITO'}
                 </button>
             </div>
         </div>
