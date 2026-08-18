@@ -8,6 +8,7 @@ import * as productsController from "./controllers/productsController";
 import * as ordersController from "./controllers/ordersController";
 import * as userController from "./controllers/userController";
 import * as discountController from "./controllers/discountController";
+import * as galleryController from "./controllers/galleryController";
 
 
 // Exportamos las funciones para que Firebase las detecte
@@ -18,3 +19,4 @@ exports.createProduct = productsController.createProduct;
 exports.loginAdmin = userController.loginAdmin;
 exports.manageDiscounts = discountController.manageDiscounts;
 exports.checkCoupon = discountController.checkCoupon;         // AHORA ES onRequest (para público)
+exports.gallery = galleryController.gallery;
