@@ -12,6 +12,8 @@ export interface Product {
     categoria: string;
     imagenURL: string;
     isActive?: boolean;
+    isStockeable: boolean;
+    stock: number;
   };
 }
 
@@ -85,7 +87,9 @@ const ProductsManagement: React.FC = () => {
         precio: '',
         categoria: '',
         imagenURL: '',
-        isActive: true
+        isActive: true,
+        isStockeable: false,
+        stock: '0'
     });
 
     // Scroll al formulario cuando se edita
@@ -179,7 +183,9 @@ const ProductsManagement: React.FC = () => {
                 precio: parseFloat(formData.precio),
                 categoria: formData.categoria,
                 imagenURL: formData.imagenURL,
-                isActive: formData.isActive
+                isActive: formData.isActive,
+                isStockeable: formData.isStockeable,
+                stock: formData.isStockeable ? parseInt(formData.stock) || 0 : 0
             };
 
             if (editingProduct && editingProduct.id) {
@@ -200,7 +206,9 @@ const ProductsManagement: React.FC = () => {
                 precio: '',
                 categoria: '',
                 imagenURL: '',
-                isActive: true
+                isActive: true,
+                isStockeable: false,
+                stock: (0).toString()
             });
             setEditingProduct(null);
 
@@ -219,7 +227,9 @@ const ProductsManagement: React.FC = () => {
             precio: product.data.precio.toString(),
             categoria: product.data.categoria,
             imagenURL: product.data.imagenURL,
-            isActive: product.data.isActive !== false
+            isActive: product.data.isActive !== false,
+            isStockeable: product.data.isStockeable || false,
+            stock: (product.data.stock || 0).toString()
         });
         scrollToForm(); // Scroll al formulario
     };
@@ -263,7 +273,9 @@ const ProductsManagement: React.FC = () => {
             precio: '',
             categoria: '',
             imagenURL: '',
-            isActive: true
+            isActive: true,
+            isStockeable: false,
+            stock: (0).toString()
         });
     };
 
@@ -323,6 +335,17 @@ const ProductsManagement: React.FC = () => {
                                 />
                             </div>
                         </div>
+
+<div className="flex justify-between items-center mt-2">
+    <span className="text-sm text-gray-600">Estado de disponibilidad:</span>
+    {formData.isStockeable ? (
+        <span className={`font-bold ${parseInt(formData.stock) <= 3 ? 'text-red-600' : 'text-green-600'}`}>
+            {formData.stock} unidades en sistema
+        </span>
+    ) : (
+        <span className="text-blue-600 font-medium italic">Producto a pedido (sin stock físico)</span>
+    )}
+</div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
@@ -406,6 +429,43 @@ const ProductsManagement: React.FC = () => {
                                 Producto visible en el catálogo
                             </label>
                         </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+    <div className="flex items-center space-x-3">
+        <input
+            type="checkbox"
+            id="isStockeable"
+            name="isStockeable"
+            checked={formData.isStockeable}
+            onChange={(e) => setFormData(prev => ({ ...prev, isStockeable: e.target.checked }))}
+            className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        />
+        <div>
+            <label htmlFor="isStockeable" className="block text-sm font-bold text-gray-800">
+                ¿Controlar Stock?
+            </label>
+            <p className="text-xs text-gray-500">Activá esto solo para productos estándar (con stock físico).</p>
+        </div>
+    </div>
+
+    {formData.isStockeable && (
+        <div>
+            <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-2">
+                Stock Disponible
+            </label>
+            <input
+                type="number"
+                id="stock"
+                name="stock"
+                value={formData.stock}
+                onChange={handleInputChange}
+                min="0"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="Cantidad disponible"
+            />
+        </div>
+    )}
+</div>
 
                         <div className="flex space-x-4">
                             <button
