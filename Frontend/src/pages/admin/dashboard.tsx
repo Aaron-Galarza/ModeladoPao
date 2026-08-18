@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   FaClipboardList, FaCashRegister, FaBoxOpen, FaSignOutAlt, 
-  FaThLarge, FaBars, FaTimes, FaTags 
+  FaThLarge, FaBars, FaTimes, FaTags, FaImages 
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../components/admin/authStore';
@@ -11,6 +11,7 @@ import ProductsManagement from './../managements/productsmanagement';
 import OrdersManagement from './../managements/ordersmanagement';
 import VentasManagement from './../managements/ventasmanagement';
 import CuponesManagement from './../managements/cuponesmanagement';
+import GalleryManagement from './../managements/gallerymanagement';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +39,8 @@ const Dashboard: React.FC = () => {
         return <ProductsManagement />;
       case 'coupons':
         return <CuponesManagement />;
+      case 'gallery':
+        return <GalleryManagement />;
       default:
         return (
           <>
@@ -113,6 +116,22 @@ const Dashboard: React.FC = () => {
                 </button>
               </div>
 
+              {/* NUEVO: Galería Card */}
+              <div className="bg-white p-6 rounded-xl shadow border-t-4 border-amber-500 hover:shadow-lg transition-shadow">
+                <div className="flex items-center mb-4">
+                  <div className="bg-amber-100 p-3 rounded-full">
+                    <FaImages className="text-amber-600 text-2xl" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 ml-4">Galería</h3>
+                </div>
+                <button 
+                  onClick={() => handleNavigation('gallery')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 px-4 rounded-lg transition-colors font-medium"
+                >
+                  Administrar
+                </button>
+              </div>
+
             </div>
           </>
         );
@@ -181,6 +200,12 @@ const Dashboard: React.FC = () => {
             onClick={() => handleNavigation('coupons')}
             icon={<FaTags />}
             label="Cupones"
+          />
+          <MenuButton 
+            active={activeSection === 'gallery'}
+            onClick={() => handleNavigation('gallery')}
+            icon={<FaImages />}
+            label="Galería"
           />
         </nav>
         
